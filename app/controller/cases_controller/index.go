@@ -82,6 +82,8 @@ func (c *Cases_Controller) Create(ctx *gin.Context) {
 // @Description Retrieve all cases from the database
 // @Tags Cases
 // @Produce json
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
 // @Success 200 {object} map[string]interface{} "Success Get Cases"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
 // @Router /api/cases [get]

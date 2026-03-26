@@ -32,7 +32,7 @@ func NewSuspectControllerRegistry(suspect_service suspect_service_interface.Susp
 // @Success 201 {object} map[string]interface{} "Success Create Suspect"
 // @Failure 400 {object} map[string]interface{} "Bad Request"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
-// @Router /api/cases/{id_case}/suspects [post]
+// @Router /api/suspect/create/{id_case} [post]
 func (c *Suspect_Controller) Create(ctx *gin.Context) {
 
 	ID_Case := ctx.Param("id_case")
@@ -85,9 +85,11 @@ func (c *Suspect_Controller) Create(ctx *gin.Context) {
 // @Tags Suspects
 // @Produce json
 // @Param id_case path string true "Case ID (UUID)"
+// @Param page query int false "Page number" default(1)
+// @Param limit query int false "Items per page" default(10)
 // @Success 200 {object} map[string]interface{} "Success Get Suspect Data"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
-// @Router /api/cases/{id_case}/suspects [get]
+// @Router /api/suspect/get-all/{id_case} [get]
 func (c *Suspect_Controller) GetAll(ctx *gin.Context) {
 
 	ID_Case := ctx.Param("id_case")
@@ -128,7 +130,7 @@ func (c *Suspect_Controller) GetAll(ctx *gin.Context) {
 // @Param id path string true "Suspect ID (UUID)"
 // @Success 200 {object} map[string]interface{} "Success Get Suspect Data"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
-// @Router /api/cases/{id_case}/suspects/{id} [get]
+// @Router /api/suspect/get-id/{id}/{id_case} [get]
 func (c *Suspect_Controller) GetById(ctx *gin.Context) {
 
 	ID_Case := ctx.Param("id_case")
@@ -173,7 +175,7 @@ func (c *Suspect_Controller) GetById(ctx *gin.Context) {
 // @Success 200 {object} map[string]interface{} "Success Update Suspect Data"
 // @Failure 400 {object} map[string]interface{} "Bad Request"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
-// @Router /api/cases/{id_case}/suspects/{id} [put]
+// @Router /api/suspect/update/{id}/{id_case} [put]
 func (c *Suspect_Controller) Update(ctx *gin.Context) {
 
 	ID_Case := ctx.Param("id_case")
@@ -231,7 +233,7 @@ func (c *Suspect_Controller) Update(ctx *gin.Context) {
 // @Param id path string true "Suspect ID (UUID)"
 // @Success 200 {object} map[string]interface{} "Success Delete Suspect Data"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
-// @Router /api/cases/{id_case}/suspects/{id} [delete]
+// @Router /api/suspect/delete/{id}/{id_case} [delete]
 func (c *Suspect_Controller) Delete(ctx *gin.Context) {
 
 	ID_Case := ctx.Param("id_case")

@@ -4,6 +4,17 @@ paths:
   /api/cases:
     get:
       description: Retrieve all cases from the database
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -20,197 +31,6 @@ paths:
       summary: Get all cases
       tags:
       - Cases
-  /api/cases/{id_case}/suspects:
-    get:
-      description: Retrieve all suspects for a specific case
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success Get Suspect Data
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get all suspects
-      tags:
-      - Suspects
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Create a new suspect for a specific case
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: ID Card Number
-        in: formData
-        name: id_card_number
-        required: true
-        type: string
-      - description: Full Name
-        in: formData
-        name: full_name
-        required: true
-        type: string
-      - description: Address
-        in: formData
-        name: address
-        required: true
-        type: string
-      - description: Alibi
-        in: formData
-        name: alibi
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Success Create Suspect
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Create a new suspect
-      tags:
-      - Suspects
-  /api/cases/{id_case}/suspects/{id}:
-    delete:
-      description: Delete a suspect from a case
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: Suspect ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success Delete Suspect Data
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Delete suspect
-      tags:
-      - Suspects
-    get:
-      description: Retrieve a specific suspect from a case
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: Suspect ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success Get Suspect Data
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Get suspect by ID
-      tags:
-      - Suspects
-    put:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Update an existing suspect information
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: Suspect ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: ID Card Number
-        in: formData
-        name: id_card_number
-        required: true
-        type: string
-      - description: Full Name
-        in: formData
-        name: full_name
-        required: true
-        type: string
-      - description: Address
-        in: formData
-        name: address
-        required: true
-        type: string
-      - description: Alibi
-        in: formData
-        name: alibi
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success Update Suspect Data
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Update suspect data
-      tags:
-      - Suspects
   /api/cases/{id}:
     get:
       description: Retrieve a specific case using its UUID
@@ -386,4 +206,208 @@ paths:
       summary: Update a case
       tags:
       - Cases
+  /api/suspect/create/{id_case}:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Create a new suspect for a specific case
+      parameters:
+      - description: Case ID (UUID)
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: ID Card Number
+        in: formData
+        name: id_card_number
+        required: true
+        type: string
+      - description: Full Name
+        in: formData
+        name: full_name
+        required: true
+        type: string
+      - description: Address
+        in: formData
+        name: address
+        required: true
+        type: string
+      - description: Alibi
+        in: formData
+        name: alibi
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Success Create Suspect
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new suspect
+      tags:
+      - Suspects
+  /api/suspect/delete/{id}/{id_case}:
+    delete:
+      description: Delete a suspect from a case
+      parameters:
+      - description: Case ID (UUID)
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: Suspect ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success Delete Suspect Data
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete suspect
+      tags:
+      - Suspects
+  /api/suspect/get-all/{id_case}:
+    get:
+      description: Retrieve all suspects for a specific case
+      parameters:
+      - description: Case ID (UUID)
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success Get Suspect Data
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all suspects
+      tags:
+      - Suspects
+  /api/suspect/get-id/{id}/{id_case}:
+    get:
+      description: Retrieve a specific suspect from a case
+      parameters:
+      - description: Case ID (UUID)
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: Suspect ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success Get Suspect Data
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get suspect by ID
+      tags:
+      - Suspects
+  /api/suspect/update/{id}/{id_case}:
+    put:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Update an existing suspect information
+      parameters:
+      - description: Case ID (UUID)
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: Suspect ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID Card Number
+        in: formData
+        name: id_card_number
+        required: true
+        type: string
+      - description: Full Name
+        in: formData
+        name: full_name
+        required: true
+        type: string
+      - description: Address
+        in: formData
+        name: address
+        required: true
+        type: string
+      - description: Alibi
+        in: formData
+        name: alibi
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success Update Suspect Data
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update suspect data
+      tags:
+      - Suspects
 swagger: "2.0"

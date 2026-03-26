@@ -89,7 +89,7 @@ func (s *Cases_Service) GetAll(page int, limit int) ([]cases_request.Cases_Respo
 
 	offset := (page - 1) * limit
 
-	cases, totalData, errGet := s.repository.GetAll(page, offset)
+	cases, totalData, errGet := s.repository.GetAll(limit, offset)
 
 	if errGet != nil {
 		return []cases_request.Cases_Response{}, helper.PaginationMeta{}, helper.NewInternalServerError("An error occurred while get case data : " + errGet.Error())

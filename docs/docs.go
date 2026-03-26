@@ -25,6 +25,22 @@ const docTemplate = `{
                     "Cases"
                 ],
                 "summary": "Get all cases",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Success Get Cases",
@@ -260,28 +276,28 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/cases/{id_case}/suspects": {
+        "/api/cases/{id}": {
             "get": {
-                "description": "Retrieve all suspects for a specific case",
+                "description": "Retrieve a specific case using its UUID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Suspects"
+                    "Cases"
                 ],
-                "summary": "Get all suspects",
+                "summary": "Get case by ID",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Case ID (UUID)",
-                        "name": "id_case",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Get Suspect Data",
+                        "description": "Success Get Case By Id",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -295,7 +311,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/suspect/create/{id_case}": {
             "post": {
                 "description": "Create a new suspect for a specific case",
                 "consumes": [
@@ -370,7 +388,102 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/cases/{id_case}/suspects/{id}": {
+        "/api/suspect/delete/{id}/{id_case}": {
+            "delete": {
+                "description": "Delete a suspect from a case",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Suspects"
+                ],
+                "summary": "Delete suspect",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Case ID (UUID)",
+                        "name": "id_case",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Suspect ID (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success Delete Suspect Data",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/suspect/get-all/{id_case}": {
+            "get": {
+                "description": "Retrieve all suspects for a specific case",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Suspects"
+                ],
+                "summary": "Get all suspects",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Case ID (UUID)",
+                        "name": "id_case",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success Get Suspect Data",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/suspect/get-id/{id}/{id_case}": {
             "get": {
                 "description": "Retrieve a specific suspect from a case",
                 "produces": [
@@ -412,7 +525,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/suspect/update/{id}/{id_case}": {
             "put": {
                 "description": "Update an existing suspect information",
                 "consumes": [
@@ -479,85 +594,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete a suspect from a case",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Suspects"
-                ],
-                "summary": "Delete suspect",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Case ID (UUID)",
-                        "name": "id_case",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Suspect ID (UUID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success Delete Suspect Data",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/api/cases/{id}": {
-            "get": {
-                "description": "Retrieve a specific case using its UUID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Cases"
-                ],
-                "summary": "Get case by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Case ID (UUID)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success Get Case By Id",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
