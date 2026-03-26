@@ -29,13 +29,20 @@ func (repo *Suspect_Repository) Create(suspect *models.Suspects) error {
 
 }
 
-func (repo *Suspect_Repository) GetAll(ID_Case string) ([]models.Suspects, error) {
+func (repo *Suspect_Repository) GetAll(ID_Case string, limit int, offset int) ([]models.Suspects, int64, error) {
 
 	var suspects []models.Suspects
+	var totalData int64
 
-	errGet := repo.slave2.Table("suspects").Where("case_id = ?", ID_Case).Find(&suspects).Error
+	errCount := repo.slave2.Table("suspects").Where("case_id = ?", ID_Case).Count(&totalData).Error
 
-	return suspects, errGet
+	if errCount != nil {
+		return nil, 0, errCount
+	}
+
+	errGet := repo.slave2.Table("suspects").Where("case_id = ?", ID_Case).Limit(limit).Offset(offset).Find(&suspects).Error
+
+	return suspects, totalData, errGet
 
 }
 

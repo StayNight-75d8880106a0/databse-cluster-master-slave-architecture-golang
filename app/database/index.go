@@ -4,6 +4,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/config/db_config"
 	"databse-cluster-master-slave-architecture-golang/app/models"
 	"fmt"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -54,6 +55,33 @@ func Connect() *DB_Cluster {
 	if ErrorConnect != nil {
 		panic("An error occurred while trying to connect to the database!! " + ErrorConnect.Error())
 	}
+
+	masterSQLDB, err := master.DB()
+	if err != nil {
+		panic("failed to get master sql.DB: " + err.Error())
+	}
+	masterSQLDB.SetMaxOpenConns(100)
+	masterSQLDB.SetMaxIdleConns(25)
+	masterSQLDB.SetConnMaxLifetime(30 * time.Minute)
+	masterSQLDB.SetConnMaxIdleTime(10 * time.Minute)
+
+	slave1SQLDB, err := slave1.DB()
+	if err != nil {
+		panic("failed to get slave1 sql.DB: " + err.Error())
+	}
+	slave1SQLDB.SetMaxOpenConns(150)
+	slave1SQLDB.SetMaxIdleConns(40)
+	slave1SQLDB.SetConnMaxLifetime(30 * time.Minute)
+	slave1SQLDB.SetConnMaxIdleTime(10 * time.Minute)
+
+	slave2SQLDB, err := slave2.DB()
+	if err != nil {
+		panic("failed to get slave2 sql.DB: " + err.Error())
+	}
+	slave2SQLDB.SetMaxOpenConns(150)
+	slave2SQLDB.SetMaxIdleConns(40)
+	slave2SQLDB.SetConnMaxLifetime(30 * time.Minute)
+	slave2SQLDB.SetConnMaxIdleTime(10 * time.Minute)
 
 	errMigrate := master.AutoMigrate(&models.Cases{}, &models.Suspects{})
 

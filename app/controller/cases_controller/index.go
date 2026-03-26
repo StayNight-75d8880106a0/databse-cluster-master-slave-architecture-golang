@@ -4,6 +4,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/helper"
 	"databse-cluster-master-slave-architecture-golang/app/interface/service/cases_service_interface"
 	"databse-cluster-master-slave-architecture-golang/app/request/cases_request"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -86,7 +87,10 @@ func (c *Cases_Controller) Create(ctx *gin.Context) {
 // @Router /api/cases [get]
 func (c *Cases_Controller) GetAll(ctx *gin.Context) {
 
-	cases, errGet := c.service.GetAll()
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+
+	cases, meta, errGet := c.service.GetAll(page, limit)
 
 	if errGet != nil {
 		if appError, ok := errGet.(*helper.AppError); ok {
@@ -104,8 +108,9 @@ func (c *Cases_Controller) GetAll(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{
-		"Message": "Success Get Cases",
-		"Data":    cases,
+		"Message":    "Success Get Cases",
+		"Data":       cases,
+		"Pagination": meta,
 	})
 
 }

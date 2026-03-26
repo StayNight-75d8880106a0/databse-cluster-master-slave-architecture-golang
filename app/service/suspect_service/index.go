@@ -7,6 +7,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/models"
 	"databse-cluster-master-slave-architecture-golang/app/request/suspects_request"
 	"errors"
+	"math"
 
 	"gorm.io/gorm"
 )
@@ -80,12 +81,21 @@ func (s *Suspect_Service) Create(ID_Case string, suspect_dto *suspects_request.S
 
 }
 
-func (s *Suspect_Service) GetAll(ID_Case string) ([]suspects_request.Suspects_Response, error) {
+func (s *Suspect_Service) GetAll(ID_Case string, page int, limit int) ([]suspects_request.Suspects_Response, helper.PaginationMeta, error) {
 
-	suspect, errGet := s.repository.GetAll(ID_Case)
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	suspect, totalData, errGet := s.repository.GetAll(ID_Case, limit, offset)
 
 	if errGet != nil {
-		return []suspects_request.Suspects_Response{}, helper.NewInternalServerError("An error occurred while get suspect data : " + errGet.Error())
+		return []suspects_request.Suspects_Response{}, helper.PaginationMeta{}, helper.NewInternalServerError("An error occurred while get suspect data : " + errGet.Error())
 	}
 
 	var responses []suspects_request.Suspects_Response
@@ -103,7 +113,16 @@ func (s *Suspect_Service) GetAll(ID_Case string) ([]suspects_request.Suspects_Re
 		responses = append(responses, *response)
 	}
 
-	return responses, nil
+	totalPage := int(math.Ceil(float64(totalData) / float64(limit)))
+
+	meta := helper.PaginationMeta{
+		Page:      page,
+		Limit:     limit,
+		TotalData: totalData,
+		TotalPage: totalPage,
+	}
+
+	return responses, meta, nil
 
 }
 

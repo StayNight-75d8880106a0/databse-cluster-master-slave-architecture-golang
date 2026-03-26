@@ -4,6 +4,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/helper"
 	"databse-cluster-master-slave-architecture-golang/app/interface/service/suspect_service_interface"
 	"databse-cluster-master-slave-architecture-golang/app/request/suspects_request"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -91,7 +92,10 @@ func (c *Suspect_Controller) GetAll(ctx *gin.Context) {
 
 	ID_Case := ctx.Param("id_case")
 
-	suspect, errGet := c.service.GetAll(ID_Case)
+	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+
+	suspect, meta, errGet := c.service.GetAll(ID_Case, page, limit)
 
 	if errGet != nil {
 		if appError, ok := errGet.(*helper.AppError); ok {
@@ -109,8 +113,9 @@ func (c *Suspect_Controller) GetAll(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{
-		"Message": "Success Get Suspect Data",
-		"Data":    suspect,
+		"Message":    "Success Get Suspect Data",
+		"Data":       suspect,
+		"Pagination": meta,
 	})
 
 }

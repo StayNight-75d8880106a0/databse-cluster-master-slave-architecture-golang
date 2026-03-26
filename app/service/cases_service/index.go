@@ -7,6 +7,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/request/cases_request"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"gorm.io/datatypes"
@@ -77,12 +78,21 @@ func (s *Cases_Service) Create(cases_dto *cases_request.Cases_Dto) (cases_reques
 
 }
 
-func (s *Cases_Service) GetAll() ([]cases_request.Cases_Response, error) {
+func (s *Cases_Service) GetAll(page int, limit int) ([]cases_request.Cases_Response, helper.PaginationMeta, error) {
 
-	cases, errGet := s.repository.GetAll()
+	if page <= 0 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	cases, totalData, errGet := s.repository.GetAll(page, offset)
 
 	if errGet != nil {
-		return []cases_request.Cases_Response{}, helper.NewInternalServerError("An error occurred while get case data : " + errGet.Error())
+		return []cases_request.Cases_Response{}, helper.PaginationMeta{}, helper.NewInternalServerError("An error occurred while get case data : " + errGet.Error())
 	}
 
 	var responses []cases_request.Cases_Response
@@ -101,7 +111,16 @@ func (s *Cases_Service) GetAll() ([]cases_request.Cases_Response, error) {
 		responses = append(responses, response)
 	}
 
-	return responses, nil
+	totalPage := int(math.Ceil(float64(totalData) / float64(limit)))
+
+	meta := helper.PaginationMeta{
+		Page:      page,
+		Limit:     limit,
+		TotalData: totalData,
+		TotalPage: totalPage,
+	}
+
+	return responses, meta, nil
 }
 
 func (s *Cases_Service) GetById(ID string) (cases_request.Cases_Response, error) {
