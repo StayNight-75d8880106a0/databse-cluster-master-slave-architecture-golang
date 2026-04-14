@@ -8,5 +8,7 @@ type Cases_Repository_Interface interface {
 	GetById(ID string) (*models.Cases, error)
 	Update(ID string, cases *models.Cases) error
 	Delete(ID string) error
-	GetByCaseNumber(case_number string) (*models.Cases, error)
+	GetCount() (int64, int64, int64, int64, error)
+	FindDetectiveByIdViaCases(id []string, detectives *[]models.Detective) error
+	UpdateDetectiveRelation(ID string, detectives []models.Detective) error
 }

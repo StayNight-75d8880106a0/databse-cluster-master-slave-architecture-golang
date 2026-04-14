@@ -6,6 +6,7 @@ type DBConfig struct {
 	MASTER_HOST string
 	SLAVE1_HOST string
 	SLAVE2_HOST string
+	SLAVE3_HOST string
 	DB_USER     string
 	DB_PASSWORD string
 	DB_NAME     string
@@ -19,6 +20,7 @@ func DB_Config() *DBConfig {
 		MASTER_HOST: os.Getenv("MASTER_HOST"),
 		SLAVE1_HOST: os.Getenv("SLAVE1_HOST"),
 		SLAVE2_HOST: os.Getenv("SLAVE2_HOST"),
+		SLAVE3_HOST: os.Getenv("SLAVE3_HOST"),
 		DB_USER:     os.Getenv("DB_USER"),
 		DB_PASSWORD: os.Getenv("DB_PASSWORD"),
 		DB_NAME:     os.Getenv("DB_NAME"),

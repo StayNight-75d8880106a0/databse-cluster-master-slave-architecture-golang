@@ -53,6 +53,8 @@ func (c *Cases_Controller) Create(ctx *gin.Context) {
 		Case_Description: request.Case_Description,
 		Incident_Date:    dateParse,
 		Location:         request.Location,
+		Status:           request.Status,
+		DetectiveIDs:     request.DetectiveIDs,
 	}
 
 	cases, errCreate := c.service.Create(input)
@@ -111,8 +113,8 @@ func (c *Cases_Controller) GetAll(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{
 		"Message":    "Success Get Cases",
-		"Data":       cases,
 		"Pagination": meta,
+		"Data":       cases,
 	})
 
 }
@@ -153,19 +155,17 @@ func (c *Cases_Controller) GetById(ctx *gin.Context) {
 
 }
 
-// @Summary Get case by case number
+// @Summary Get Count Case
 // @Description Retrieve a case using its case number
 // @Tags Cases
 // @Produce json
 // @Param number path string true "Case Number"
-// @Success 200 {object} map[string]interface{} "Success Get Case By Case Number"
+// @Success 200 {object} map[string]interface{} "Success Get Count Cases"
 // @Failure 500 {object} map[string]interface{} "Internal Server Error"
-// @Router /api/cases/case-number/{number} [get]
-func (c *Cases_Controller) GetByCaseNumber(ctx *gin.Context) {
+// @Router /api/cases/count [get]
+func (c *Cases_Controller) GetCount(ctx *gin.Context) {
 
-	case_number := ctx.Param("number")
-
-	cases, errGet := c.service.GetByCaseNumber(case_number)
+	CasesCount, errGet := c.service.GetCount()
 
 	if errGet != nil {
 		if appError, ok := errGet.(*helper.AppError); ok {
@@ -183,8 +183,8 @@ func (c *Cases_Controller) GetByCaseNumber(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{
-		"Message": "Success Get Case By Case Number",
-		"Data":    cases,
+		"Message": "Success Count Cases",
+		"Data":    CasesCount,
 	})
 
 }
@@ -225,6 +225,8 @@ func (c *Cases_Controller) Update(ctx *gin.Context) {
 		Case_Description: request.Case_Description,
 		Incident_Date:    dateParse,
 		Location:         request.Location,
+		Status:           request.Status,
+		DetectiveIDs:     request.DetectiveIDs,
 	}
 
 	cases, errUpdate := c.service.Update(id, input)

@@ -3,10 +3,10 @@ package suspects_request
 import "time"
 
 type Suspects_Request struct {
-	ID_Card_Number *string `form:"id_card_number"`
-	Full_Name      *string `form:"full_name"`
-	Address        *string `form:"address"`
-	Alibi          *string `form:"alibi"`
+	ID_Card_Number *string `json:"id_card_number"`
+	Full_Name      *string `json:"full_name"`
+	Address        *string `json:"address"`
+	Alibi          *string `json:"alibi"`
 }
 
 type Suspects_Dto struct {

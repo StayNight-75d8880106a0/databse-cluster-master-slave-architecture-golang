@@ -12,3 +12,7 @@ type Suspects struct {
 	CreatedAt      time.Time `gorm:"column:created_at"`
 	UpdatedAt      time.Time `gorm:"column:updated_at"`
 }
+
+func (Suspects) TableName() string {
+	return "suspects"
+}
