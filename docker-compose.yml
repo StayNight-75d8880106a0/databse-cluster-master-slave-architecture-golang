@@ -110,18 +110,8 @@ services:
     restart: unless-stopped
     ports: 
       - ${APP_PORT}:${APP_PORT}
-    environment:
-      - MASTER_HOST=${MASTER_HOST}
-      - SLAVE1_HOST=${SLAVE1_HOST}
-      - SLAVE2_HOST=${SLAVE2_HOST}
-      - SLAVE3_HOST=${SLAVE3_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_PORT=${DB_PORT}
-      - DB_SSLMODE=${DB_SSLMODE}
-      - DB_TIMEZONE=${DB_TIMEZONE}
-      - APP_PORT=:${APP_PORT}
+    env_file:
+      - .env
     networks:
       - app_network
     depends_on:

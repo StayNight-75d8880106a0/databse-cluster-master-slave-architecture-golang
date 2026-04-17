@@ -48,6 +48,10 @@ func (s *Detective_Service) Create(detective_dto *detective_request.Detective_Dt
 		return detective_request.Detective_Response{}, helper.NewBadRequest("Investigation Style Cannot Be Empty!")
 	}
 
+	if !helper.IsValidInvestigationStyle(*detective_dto.Investigation_Style) {
+		return detective_request.Detective_Response{}, helper.NewBadRequest("Investigation Style must be one of: Evidence-Based Investigation, Interview-Based Investigation, Undercover Investigation, Follow The Money Investigation, Report-Based Investigation")
+	}
+
 	detective := &models.Detective{
 		Name:                detective_dto.Name,
 		Badge_Number:        detective_dto.Badge_Number,
@@ -179,6 +183,10 @@ func (s *Detective_Service) Update(ID string, detective_dto *detective_request.D
 
 	if detective_dto.Investigation_Style == nil || *detective_dto.Investigation_Style == "" {
 		return detective_request.Detective_Response{}, helper.NewBadRequest("Investigation Style Cannot Be Empty!")
+	}
+
+	if !helper.IsValidInvestigationStyle(*detective_dto.Investigation_Style) {
+		return detective_request.Detective_Response{}, helper.NewBadRequest("Investigation Style must be one of: Evidence-Based Investigation, Interview-Based Investigation, Undercover Investigation, Follow The Money Investigation, Report-Based Investigation")
 	}
 
 	detective := &models.Detective{

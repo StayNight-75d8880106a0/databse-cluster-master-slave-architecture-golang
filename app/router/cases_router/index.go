@@ -12,6 +12,7 @@ func CasesRouter(app *gin.Engine, CasesController *cases_controller.Cases_Contro
 
 	cases.POST("/create", CasesController.Create)
 	cases.GET("/", CasesController.GetAll)
+	cases.GET("/latest", CasesController.GetCasesLatestUpdate)
 	cases.GET("/:id", CasesController.GetById)
 	cases.GET("/count", CasesController.GetCount)
 	cases.PUT("/update/:id", CasesController.Update)

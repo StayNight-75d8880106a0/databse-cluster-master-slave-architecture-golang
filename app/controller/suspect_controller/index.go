@@ -5,6 +5,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/interface/service/suspect_service_interface"
 	"databse-cluster-master-slave-architecture-golang/app/request/suspects_request"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,19 +20,15 @@ func NewSuspectControllerRegistry(suspect_service suspect_service_interface.Susp
 	}
 }
 
-// @Summary Create a new suspect
-// @Description Create a new suspect for a specific case
+// @Summary Membuat entitas tersangka baru
+// @Description Endpoint ini bertanggung jawab untuk pembuatan tersangka baru pada kasus tertentu, termasuk validasi, transformasi input, dan penanganan error. Proses ini penting untuk integritas data investigasi. Asumsi: ID kasus valid, NIK unik.
 // @Tags Suspects
-// @Accept application/x-www-form-urlencoded
+// @Accept application/json
 // @Produce json
-// @Param id_case path string true "Case ID (UUID)"
-// @Param id_card_number formData string true "ID Card Number"
-// @Param full_name formData string true "Full Name"
-// @Param address formData string true "Address"
-// @Param alibi formData string true "Alibi"
-// @Success 201 {object} map[string]interface{} "Success Create Suspect"
-// @Failure 400 {object} map[string]interface{} "Bad Request"
-// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Param id_case path string true "UUID kasus, wajib diisi"
+// @Param request body suspects_request.Suspects_Request true "Payload tersangka dalam format JSON.\n\nField 'gender' hanya dapat bernilai: \n- 'Male': Menunjukkan jenis kelamin laki-laki. Dalam perspektif kriminologi dan psikologi forensik, identifikasi gender ini penting untuk analisis pola perilaku, kecenderungan kriminal, serta pendekatan interogasi dan perlindungan hukum yang relevan. Gender laki-laki sering dikaitkan dengan karakteristik fisik dan psikososial tertentu yang dapat mempengaruhi jalannya investigasi.\n- 'Female': Menunjukkan jenis kelamin perempuan. Gender ini memiliki implikasi signifikan dalam proses investigasi, terutama terkait perlindungan saksi, pendekatan psikologis, dan sensitivitas terhadap isu gender-based violence. Penanganan tersangka atau saksi perempuan menuntut penerapan prinsip non-diskriminasi dan perlakuan khusus sesuai standar hak asasi manusia.\n\nField 'status' hanya dapat bernilai: \n- 'Arrested': Status ini menandakan bahwa tersangka telah resmi ditahan oleh aparat penegak hukum. Dalam sistem peradilan pidana, status ini menuntut pemenuhan hak-hak hukum tersangka, termasuk akses bantuan hukum dan perlindungan dari perlakuan sewenang-wenang. Penahanan merupakan fase kritis yang mempengaruhi kelanjutan proses investigasi dan peradilan.\n- 'Released': Menunjukkan bahwa tersangka telah dibebaskan, baik karena tidak cukup bukti, alasan hukum, atau pertimbangan kemanusiaan. Status ini penting dalam evaluasi efektivitas investigasi dan menjadi indikator penerapan asas praduga tak bersalah.\n- 'Wanted': Status ini berarti tersangka sedang dalam pencarian aktif oleh aparat penegak hukum. Penetapan status 'wanted' memerlukan koordinasi lintas lembaga, publikasi identitas, dan penggunaan sumber daya intelijen untuk penangkapan.\n- 'Under Investigation': Menandakan bahwa individu masih dalam proses penyelidikan dan status hukumnya belum final. Status ini menuntut kehati-hatian dalam publikasi data dan perlakuan terhadap individu, guna menjaga asas praduga tak bersalah dan integritas proses hukum.\n- 'Eyewitness': Status ini diberikan kepada individu yang berperan sebagai saksi mata dalam kasus. Saksi mata memiliki nilai probatif tinggi dalam pembuktian perkara, sehingga perlindungan dan penanganan profesional sangat diperlukan untuk menjaga keamanan dan keabsahan kesaksian."
+// @Failure 400 {object} map[string]interface{} "Permintaan tidak valid; data input salah"
+// @Failure 500 {object} map[string]interface{} "Terjadi kesalahan sistem internal"
 // @Router /api/suspect/create/{id_case} [post]
 func (c *Suspect_Controller) Create(ctx *gin.Context) {
 
@@ -48,12 +45,19 @@ func (c *Suspect_Controller) Create(ctx *gin.Context) {
 		})
 	}
 
+	dateParse, _ := time.Parse("2006-01-02", request.Date_Of_Birth)
+
 	input := &suspects_request.Suspects_Dto{
 		Case_ID:        &ID_Case,
-		ID_Card_Number: request.ID_Card_Number,
-		Full_Name:      request.Full_Name,
-		Address:        request.Address,
-		Alibi:          request.Alibi,
+		ID_Card_Number: &request.ID_Card_Number,
+		Full_Name:      &request.Full_Name,
+		Gender:         &request.Gender,
+		Date_Of_Birth:  dateParse,
+		Address:        &request.Address,
+		Phone:          &request.Phone,
+		Occupation:     &request.Occupation,
+		Alibi:          &request.Alibi,
+		Status:         &request.Status,
 	}
 
 	suspect, errCreate := c.service.Create(ID_Case, input)
@@ -80,15 +84,15 @@ func (c *Suspect_Controller) Create(ctx *gin.Context) {
 
 }
 
-// @Summary Get all suspects
-// @Description Retrieve all suspects for a specific case
+// @Summary Mendapatkan seluruh data tersangka pada kasus
+// @Description Endpoint ini mengambil seluruh data tersangka untuk kasus tertentu dengan dukungan paginasi. Cocok untuk monitoring investigasi. Asumsi: ID kasus valid.
 // @Tags Suspects
 // @Produce json
-// @Param id_case path string true "Case ID (UUID)"
-// @Param page query int false "Page number" default(1)
-// @Param limit query int false "Items per page" default(10)
-// @Success 200 {object} map[string]interface{} "Success Get Suspect Data"
-// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Param id_case path string true "UUID kasus, wajib diisi"
+// @Param page query int false "Nomor halaman, default 1"
+// @Param limit query int false "Jumlah item per halaman, default 10"
+// @Success 200 {object} map[string]interface{} "Berhasil mendapatkan daftar tersangka beserta metadata paginasi"
+// @Failure 500 {object} map[string]interface{} "Terjadi kesalahan sistem internal"
 // @Router /api/suspect/get-all/{id_case} [get]
 func (c *Suspect_Controller) GetAll(ctx *gin.Context) {
 
@@ -122,14 +126,14 @@ func (c *Suspect_Controller) GetAll(ctx *gin.Context) {
 
 }
 
-// @Summary Get suspect by ID
-// @Description Retrieve a specific suspect from a case
+// @Summary Mendapatkan tersangka berdasarkan ID pada kasus
+// @Description Endpoint ini mengambil data tersangka spesifik berdasarkan UUID pada kasus tertentu. Cocok untuk detail view investigasi. Asumsi: ID kasus dan ID tersangka valid.
 // @Tags Suspects
 // @Produce json
-// @Param id_case path string true "Case ID (UUID)"
-// @Param id path string true "Suspect ID (UUID)"
-// @Success 200 {object} map[string]interface{} "Success Get Suspect Data"
-// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Param id_case path string true "UUID kasus, wajib diisi"
+// @Param id path string true "UUID tersangka, wajib diisi"
+// @Success 200 {object} map[string]interface{} "Berhasil mendapatkan data tersangka"
+// @Failure 500 {object} map[string]interface{} "Terjadi kesalahan sistem internal"
 // @Router /api/suspect/get-id/{id}/{id_case} [get]
 func (c *Suspect_Controller) GetById(ctx *gin.Context) {
 
@@ -161,20 +165,17 @@ func (c *Suspect_Controller) GetById(ctx *gin.Context) {
 
 }
 
-// @Summary Update suspect data
-// @Description Update an existing suspect information
+// @Summary Memperbarui data tersangka
+// @Description Endpoint ini memperbarui data tersangka pada kasus tertentu berdasarkan ID, mendukung perubahan seluruh atribut utama. Validasi dan error handling dilakukan secara ketat. Asumsi: ID kasus dan ID tersangka valid.
 // @Tags Suspects
-// @Accept application/x-www-form-urlencoded
+// @Accept application/json
 // @Produce json
-// @Param id_case path string true "Case ID (UUID)"
-// @Param id path string true "Suspect ID (UUID)"
-// @Param id_card_number formData string true "ID Card Number"
-// @Param full_name formData string true "Full Name"
-// @Param address formData string true "Address"
-// @Param alibi formData string true "Alibi"
-// @Success 200 {object} map[string]interface{} "Success Update Suspect Data"
-// @Failure 400 {object} map[string]interface{} "Bad Request"
-// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Param id_case path string true "UUID kasus, wajib diisi"
+// @Param id path string true "UUID tersangka, wajib diisi"
+// @Param request body suspects_request.Suspects_Request true "Payload tersangka dalam format JSON.\n\nField 'gender' hanya dapat bernilai: \n- 'Male': Menunjukkan jenis kelamin laki-laki. Dalam perspektif kriminologi dan psikologi forensik, identifikasi gender ini penting untuk analisis pola perilaku, kecenderungan kriminal, serta pendekatan interogasi dan perlindungan hukum yang relevan. Gender laki-laki sering dikaitkan dengan karakteristik fisik dan psikososial tertentu yang dapat mempengaruhi jalannya investigasi.\n- 'Female': Menunjukkan jenis kelamin perempuan. Gender ini memiliki implikasi signifikan dalam proses investigasi, terutama terkait perlindungan saksi, pendekatan psikologis, dan sensitivitas terhadap isu gender-based violence. Penanganan tersangka atau saksi perempuan menuntut penerapan prinsip non-diskriminasi dan perlakuan khusus sesuai standar hak asasi manusia.\n\nField 'status' hanya dapat bernilai: \n- 'Arrested': Status ini menandakan bahwa tersangka telah resmi ditahan oleh aparat penegak hukum. Dalam sistem peradilan pidana, status ini menuntut pemenuhan hak-hak hukum tersangka, termasuk akses bantuan hukum dan perlindungan dari perlakuan sewenang-wenang. Penahanan merupakan fase kritis yang mempengaruhi kelanjutan proses investigasi dan peradilan.\n- 'Released': Menunjukkan bahwa tersangka telah dibebaskan, baik karena tidak cukup bukti, alasan hukum, atau pertimbangan kemanusiaan. Status ini penting dalam evaluasi efektivitas investigasi dan menjadi indikator penerapan asas praduga tak bersalah.\n- 'Wanted': Status ini berarti tersangka sedang dalam pencarian aktif oleh aparat penegak hukum. Penetapan status 'wanted' memerlukan koordinasi lintas lembaga, publikasi identitas, dan penggunaan sumber daya intelijen untuk penangkapan.\n- 'Under Investigation': Menandakan bahwa individu masih dalam proses penyelidikan dan status hukumnya belum final. Status ini menuntut kehati-hatian dalam publikasi data dan perlakuan terhadap individu, guna menjaga asas praduga tak bersalah dan integritas proses hukum.\n- 'Eyewitness': Status ini diberikan kepada individu yang berperan sebagai saksi mata dalam kasus. Saksi mata memiliki nilai probatif tinggi dalam pembuktian perkara, sehingga perlindungan dan penanganan profesional sangat diperlukan untuk menjaga keamanan dan keabsahan kesaksian."
+// @Success 200 {object} map[string]interface{} "Berhasil memperbarui data tersangka"
+// @Failure 400 {object} map[string]interface{} "Permintaan tidak valid; data input salah"
+// @Failure 500 {object} map[string]interface{} "Terjadi kesalahan sistem internal"
 // @Router /api/suspect/update/{id}/{id_case} [put]
 func (c *Suspect_Controller) Update(ctx *gin.Context) {
 
@@ -193,12 +194,19 @@ func (c *Suspect_Controller) Update(ctx *gin.Context) {
 		})
 	}
 
+	dateParse, _ := time.Parse("2006-01-02", request.Date_Of_Birth)
+
 	input := &suspects_request.Suspects_Dto{
 		Case_ID:        &ID_Case,
-		ID_Card_Number: request.ID_Card_Number,
-		Full_Name:      request.Full_Name,
-		Address:        request.Address,
-		Alibi:          request.Alibi,
+		ID_Card_Number: &request.ID_Card_Number,
+		Full_Name:      &request.Full_Name,
+		Gender:         &request.Gender,
+		Date_Of_Birth:  dateParse,
+		Address:        &request.Address,
+		Phone:          &request.Phone,
+		Occupation:     &request.Occupation,
+		Alibi:          &request.Alibi,
+		Status:         &request.Status,
 	}
 
 	suspect, errUpdate := c.service.Update(ID, ID_Case, input)
@@ -225,14 +233,14 @@ func (c *Suspect_Controller) Update(ctx *gin.Context) {
 
 }
 
-// @Summary Delete suspect
-// @Description Delete a suspect from a case
+// @Summary Menghapus data tersangka dari kasus
+// @Description Endpoint ini menghapus data tersangka berdasarkan ID pada kasus tertentu. Proses ini tidak dapat dibatalkan dan berdampak pada data investigasi terkait. Asumsi: ID kasus dan ID tersangka valid.
 // @Tags Suspects
 // @Produce json
-// @Param id_case path string true "Case ID (UUID)"
-// @Param id path string true "Suspect ID (UUID)"
-// @Success 200 {object} map[string]interface{} "Success Delete Suspect Data"
-// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Param id_case path string true "UUID kasus, wajib diisi"
+// @Param id path string true "UUID tersangka, wajib diisi"
+// @Success 200 {object} map[string]interface{} "Berhasil menghapus tersangka"
+// @Failure 500 {object} map[string]interface{} "Terjadi kesalahan sistem internal"
 // @Router /api/suspect/delete/{id}/{id_case} [delete]
 func (c *Suspect_Controller) Delete(ctx *gin.Context) {
 

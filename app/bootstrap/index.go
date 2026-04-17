@@ -11,7 +11,9 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/router/detective_router"
 	"databse-cluster-master-slave-architecture-golang/app/router/suspect_router"
 	_ "databse-cluster-master-slave-architecture-golang/docs"
+	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -21,10 +23,21 @@ import (
 func InitAPP() {
 	_ = godotenv.Load()
 
+	FrontendURL := os.Getenv("FRONTEND_URL")
+
 	config.Config()
 	database.Connect()
 
 	app := gin.Default()
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{FrontendURL},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"content-length"},
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60,
+	}))
 
 	app.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
@@ -42,5 +55,5 @@ func InitAPP() {
 	suspect_router.SuspectRouter(app, SuspectModule.Suspect_Controller)
 	detective_router.DetectiveRouter(app, DetectiveModule.Detective_Controller)
 
-	app.Run(app_config.PORT)
+	app.Run(":" + app_config.PORT)
 }

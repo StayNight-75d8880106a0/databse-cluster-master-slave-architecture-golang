@@ -17,40 +17,44 @@ const docTemplate = `{
     "paths": {
         "/api/cases": {
             "get": {
-                "description": "Retrieve all cases from the database",
+                "description": "Endpoint ini mengambil seluruh data kasus dengan dukungan paginasi dan pencarian judul. Cocok untuk monitoring dan analisis kasus. Asumsi: paginasi default 10 item/halaman.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Cases"
                 ],
-                "summary": "Get all cases",
+                "summary": "Mendapatkan seluruh data kasus",
                 "parameters": [
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
+                        "description": "Nomor halaman, default 1",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "Items per page",
+                        "description": "Jumlah item per halaman, default 10",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Pencarian berdasarkan judul kasus",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Get Cases",
+                        "description": "Berhasil mendapatkan daftar kasus beserta metadata paginasi",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -59,35 +63,26 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/cases/case-number/{number}": {
+        "/api/cases/count": {
             "get": {
-                "description": "Retrieve a case using its case number",
+                "description": "Endpoint ini mengambil jumlah total kasus yang terdaftar dalam sistem. Cocok untuk statistik dan monitoring. Asumsi: data konsisten.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Cases"
                 ],
-                "summary": "Get case by case number",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Case Number",
-                        "name": "number",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Mendapatkan jumlah kasus",
                 "responses": {
                     "200": {
-                        "description": "Success Get Case By Case Number",
+                        "description": "Berhasil mendapatkan jumlah kasus",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -98,9 +93,9 @@ const docTemplate = `{
         },
         "/api/cases/create": {
             "post": {
-                "description": "Create a new case with title, description, incident date, and location",
+                "description": "Endpoint ini bertanggung jawab untuk pembuatan kasus baru, termasuk validasi, transformasi input, dan penanganan error. Proses ini krusial dalam workflow investigasi. Asumsi: data valid, judul unik per lokasi dan waktu.",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -108,54 +103,35 @@ const docTemplate = `{
                 "tags": [
                     "Cases"
                 ],
-                "summary": "Create a new case",
+                "summary": "Membuat entitas kasus baru",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Case Title",
-                        "name": "case_title",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Case Description",
-                        "name": "case_description",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Incident Date (YYYY-MM-DD)",
-                        "name": "incident_date",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Case Location",
-                        "name": "location",
-                        "in": "formData",
-                        "required": true
+                        "description": "Payload kasus dalam format JSON.\n\nField 'status' hanya dapat bernilai salah satu dari: \n- 'Open': Menandakan kasus baru dibuka dan seluruh proses investigasi masih dalam tahap inisiasi. Status ini merepresentasikan fase awal dalam siklus hidup kasus, di mana pengumpulan bukti dan identifikasi pihak terkait menjadi prioritas utama. \n- 'In Progress': Mengindikasikan bahwa kasus sedang dalam proses investigasi aktif. Pada tahap ini, seluruh sumber daya dialokasikan untuk analisis, pemeriksaan saksi, dan pengembangan hipotesis. Status ini menuntut adanya pembaruan berkala dan monitoring ketat terhadap perkembangan kasus. \n- 'Closed': Menunjukkan bahwa seluruh proses investigasi telah selesai, baik karena kasus telah terpecahkan, tidak ditemukan cukup bukti, atau alasan administratif lainnya. Status ini menandai berakhirnya siklus investigasi dan seluruh data kasus diarsipkan untuk keperluan audit dan pembelajaran institusional.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cases_request.Cases_Request"
+                        }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Success Create Case",
+                        "description": "Kasus berhasil dibuat; response berisi data kasus baru",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Bad Request",
+                        "description": "Permintaan tidak valid; data input salah",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -166,18 +142,18 @@ const docTemplate = `{
         },
         "/api/cases/delete/{id}": {
             "delete": {
-                "description": "Delete a case by its ID",
+                "description": "Endpoint ini menghapus data kasus berdasarkan ID. Proses ini tidak dapat dibatalkan dan berdampak pada data terkait. Asumsi: ID valid dan eksis.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Cases"
                 ],
-                "summary": "Delete a case",
+                "summary": "Menghapus data kasus",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus yang akan dihapus",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -185,14 +161,42 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Delete Case",
+                        "description": "Berhasil menghapus kasus",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/cases/latest": {
+            "get": {
+                "description": "Endpoint ini mengambil seluruh data kasus dengan dukungan paginasi dan pencarian judul. Cocok untuk monitoring dan analisis kasus.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cases"
+                ],
+                "summary": "Mendapatkan seluruh data kasus yang terakhir diperbarui",
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mendapatkan daftar kasus terbaru dengan maksimal 5 data",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -203,9 +207,9 @@ const docTemplate = `{
         },
         "/api/cases/update/{id}": {
             "put": {
-                "description": "Update an existing case with new title, description, incident date, and location",
+                "description": "Endpoint ini memperbarui data kasus berdasarkan ID, mendukung perubahan seluruh atribut utama. Validasi dan error handling dilakukan secara ketat. Asumsi: ID valid, judul tetap unik.",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -213,61 +217,42 @@ const docTemplate = `{
                 "tags": [
                     "Cases"
                 ],
-                "summary": "Update a case",
+                "summary": "Memperbarui data kasus",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus yang akan diperbarui",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "Case Title",
-                        "name": "case_title",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Case Description",
-                        "name": "case_description",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Incident Date (YYYY-MM-DD)",
-                        "name": "incident_date",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Case Location",
-                        "name": "location",
-                        "in": "formData",
-                        "required": true
+                        "description": "Payload kasus dalam format JSON.\n\nField 'status' hanya dapat bernilai salah satu dari: \n- 'Open': Menandakan kasus baru dibuka dan seluruh proses investigasi masih dalam tahap inisiasi. Status ini merepresentasikan fase awal dalam siklus hidup kasus, di mana pengumpulan bukti dan identifikasi pihak terkait menjadi prioritas utama. \n- 'In Progress': Mengindikasikan bahwa kasus sedang dalam proses investigasi aktif. Pada tahap ini, seluruh sumber daya dialokasikan untuk analisis, pemeriksaan saksi, dan pengembangan hipotesis. Status ini menuntut adanya pembaruan berkala dan monitoring ketat terhadap perkembangan kasus. \n- 'Closed': Menunjukkan bahwa seluruh proses investigasi telah selesai, baik karena kasus telah terpecahkan, tidak ditemukan cukup bukti, atau alasan administratif lainnya. Status ini menandai berakhirnya siklus investigasi dan seluruh data kasus diarsipkan untuk keperluan audit dan pembelajaran institusional.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/cases_request.Cases_Request"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Update Case",
+                        "description": "Berhasil memperbarui data kasus",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Bad Request",
+                        "description": "Permintaan tidak valid; data input salah",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -278,18 +263,18 @@ const docTemplate = `{
         },
         "/api/cases/{id}": {
             "get": {
-                "description": "Retrieve a specific case using its UUID",
+                "description": "Endpoint ini mengambil data kasus spesifik berdasarkan UUID. Cocok untuk detail view atau proses investigasi lanjutan. Asumsi: ID valid dan eksis.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Cases"
                 ],
-                "summary": "Get case by ID",
+                "summary": "Mendapatkan kasus berdasarkan ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus yang dicari",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -297,14 +282,235 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Get Case By Id",
+                        "description": "Berhasil mendapatkan data kasus",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/detective": {
+            "get": {
+                "description": "Endpoint ini mengambil seluruh data detektif dengan dukungan paginasi. Cocok untuk monitoring personel investigasi. Asumsi: data konsisten, paginasi default 10 item per halaman.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Detectives"
+                ],
+                "summary": "Mendapatkan seluruh data detektif",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Nomor halaman, default 1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah item per halaman, default 10",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mendapatkan daftar detektif beserta metadata paginasi",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan sistem internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/detective/create": {
+            "post": {
+                "description": "Endpoint ini melakukan proses pembuatan detektif baru, termasuk validasi data, transformasi input, dan penanganan error. Proses ini penting untuk memastikan integritas data personel investigasi. Asumsi: data valid, badge_number unik. Batasan: hanya admin dapat akses.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Detectives"
+                ],
+                "summary": "Membuat entitas detektif baru",
+                "parameters": [
+                    {
+                        "description": "Payload detektif dalam format JSON.\n\nField 'investigation_style' hanya dapat bernilai salah satu dari: \n- 'Evidence-Based Investigation': Pendekatan investigasi yang menitikberatkan pada pengumpulan, analisis, dan interpretasi bukti fisik secara sistematis. Metode ini mengedepankan objektivitas dan validitas ilmiah dalam setiap tahapan investigasi. \n- 'Interview-Based Investigation': Strategi investigasi yang berfokus pada teknik wawancara mendalam terhadap saksi, korban, dan tersangka. Pendekatan ini menuntut keterampilan komunikasi interpersonal dan analisis psikologis tingkat tinggi. \n- 'Undercover Investigation': Metode investigasi di mana detektif menyamar untuk memperoleh informasi yang tidak dapat diakses secara terbuka. Pendekatan ini sangat berisiko namun efektif dalam mengungkap kejahatan terorganisir. \n- 'Follow The Money Investigation': Investigasi yang memprioritaskan pelacakan aliran dana untuk mengidentifikasi motif, pelaku, dan jaringan kejahatan. Pendekatan ini sangat relevan dalam kasus korupsi dan kejahatan finansial. \n- 'Report-Based Investigation': Pendekatan yang mengandalkan analisis laporan, dokumen, dan data administratif sebagai sumber utama informasi. Cocok untuk kasus yang membutuhkan audit forensik dan penelusuran administratif secara mendalam.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/detective_request.Detective_Request"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Detektif berhasil dibuat; response berisi data detektif baru",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid; data input salah atau format tidak sesuai",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan sistem internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/detective/delete/{id}": {
+            "delete": {
+                "description": "Endpoint ini menghapus data detektif berdasarkan ID. Proses ini tidak dapat dibatalkan dan berdampak pada assignment kasus terkait. Asumsi: ID valid dan eksis.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Detectives"
+                ],
+                "summary": "Menghapus data detektif",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID detektif yang akan dihapus",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil menghapus detektif",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan sistem internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/detective/update/{id}": {
+            "put": {
+                "description": "Endpoint ini memperbarui data detektif berdasarkan ID, mendukung perubahan seluruh atribut utama. Validasi dan error handling dilakukan secara ketat. Asumsi: ID valid, badge_number tetap unik.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Detectives"
+                ],
+                "summary": "Memperbarui data detektif",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID detektif yang akan diperbarui",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Payload detektif dalam format JSON.\n\nField 'investigation_style' hanya dapat bernilai salah satu dari: \n- 'Evidence-Based Investigation': Pendekatan investigasi yang menitikberatkan pada pengumpulan, analisis, dan interpretasi bukti fisik secara sistematis. Metode ini mengedepankan objektivitas dan validitas ilmiah dalam setiap tahapan investigasi. \n- 'Interview-Based Investigation': Strategi investigasi yang berfokus pada teknik wawancara mendalam terhadap saksi, korban, dan tersangka. Pendekatan ini menuntut keterampilan komunikasi interpersonal dan analisis psikologis tingkat tinggi. \n- 'Undercover Investigation': Metode investigasi di mana detektif menyamar untuk memperoleh informasi yang tidak dapat diakses secara terbuka. Pendekatan ini sangat berisiko namun efektif dalam mengungkap kejahatan terorganisir. \n- 'Follow The Money Investigation': Investigasi yang memprioritaskan pelacakan aliran dana untuk mengidentifikasi motif, pelaku, dan jaringan kejahatan. Pendekatan ini sangat relevan dalam kasus korupsi dan kejahatan finansial. \n- 'Report-Based Investigation': Pendekatan yang mengandalkan analisis laporan, dokumen, dan data administratif sebagai sumber utama informasi. Cocok untuk kasus yang membutuhkan audit forensik dan penelusuran administratif secara mendalam.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/detective_request.Detective_Request"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil memperbarui data detektif",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Permintaan tidak valid; data input salah",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan sistem internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/detective/{id}": {
+            "get": {
+                "description": "Endpoint ini mengambil data detektif spesifik berdasarkan UUID. Cocok untuk detail view atau proses assignment kasus. Asumsi: ID valid dan eksis.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Detectives"
+                ],
+                "summary": "Mendapatkan detektif berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID detektif yang dicari",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil mendapatkan data detektif",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -315,9 +521,9 @@ const docTemplate = `{
         },
         "/api/suspect/create/{id_case}": {
             "post": {
-                "description": "Create a new suspect for a specific case",
+                "description": "Endpoint ini bertanggung jawab untuk pembuatan tersangka baru pada kasus tertentu, termasuk validasi, transformasi input, dan penanganan error. Proses ini penting untuk integritas data investigasi. Asumsi: ID kasus valid, NIK unik.",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -325,61 +531,35 @@ const docTemplate = `{
                 "tags": [
                     "Suspects"
                 ],
-                "summary": "Create a new suspect",
+                "summary": "Membuat entitas tersangka baru",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus, wajib diisi",
                         "name": "id_case",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "ID Card Number",
-                        "name": "id_card_number",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Full Name",
-                        "name": "full_name",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Address",
-                        "name": "address",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Alibi",
-                        "name": "alibi",
-                        "in": "formData",
-                        "required": true
+                        "description": "Payload tersangka dalam format JSON.\n\nField 'gender' hanya dapat bernilai: \n- 'Male': Menunjukkan jenis kelamin laki-laki. Dalam perspektif kriminologi dan psikologi forensik, identifikasi gender ini penting untuk analisis pola perilaku, kecenderungan kriminal, serta pendekatan interogasi dan perlindungan hukum yang relevan. Gender laki-laki sering dikaitkan dengan karakteristik fisik dan psikososial tertentu yang dapat mempengaruhi jalannya investigasi.\n- 'Female': Menunjukkan jenis kelamin perempuan. Gender ini memiliki implikasi signifikan dalam proses investigasi, terutama terkait perlindungan saksi, pendekatan psikologis, dan sensitivitas terhadap isu gender-based violence. Penanganan tersangka atau saksi perempuan menuntut penerapan prinsip non-diskriminasi dan perlakuan khusus sesuai standar hak asasi manusia.\n\nField 'status' hanya dapat bernilai: \n- 'Arrested': Status ini menandakan bahwa tersangka telah resmi ditahan oleh aparat penegak hukum. Dalam sistem peradilan pidana, status ini menuntut pemenuhan hak-hak hukum tersangka, termasuk akses bantuan hukum dan perlindungan dari perlakuan sewenang-wenang. Penahanan merupakan fase kritis yang mempengaruhi kelanjutan proses investigasi dan peradilan.\n- 'Released': Menunjukkan bahwa tersangka telah dibebaskan, baik karena tidak cukup bukti, alasan hukum, atau pertimbangan kemanusiaan. Status ini penting dalam evaluasi efektivitas investigasi dan menjadi indikator penerapan asas praduga tak bersalah.\n- 'Wanted': Status ini berarti tersangka sedang dalam pencarian aktif oleh aparat penegak hukum. Penetapan status 'wanted' memerlukan koordinasi lintas lembaga, publikasi identitas, dan penggunaan sumber daya intelijen untuk penangkapan.\n- 'Under Investigation': Menandakan bahwa individu masih dalam proses penyelidikan dan status hukumnya belum final. Status ini menuntut kehati-hatian dalam publikasi data dan perlakuan terhadap individu, guna menjaga asas praduga tak bersalah dan integritas proses hukum.\n- 'Eyewitness': Status ini diberikan kepada individu yang berperan sebagai saksi mata dalam kasus. Saksi mata memiliki nilai probatif tinggi dalam pembuktian perkara, sehingga perlindungan dan penanganan profesional sangat diperlukan untuk menjaga keamanan dan keabsahan kesaksian.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/suspects_request.Suspects_Request"
+                        }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Success Create Suspect",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Permintaan tidak valid; data input salah",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -390,25 +570,25 @@ const docTemplate = `{
         },
         "/api/suspect/delete/{id}/{id_case}": {
             "delete": {
-                "description": "Delete a suspect from a case",
+                "description": "Endpoint ini menghapus data tersangka berdasarkan ID pada kasus tertentu. Proses ini tidak dapat dibatalkan dan berdampak pada data investigasi terkait. Asumsi: ID kasus dan ID tersangka valid.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Suspects"
                 ],
-                "summary": "Delete suspect",
+                "summary": "Menghapus data tersangka dari kasus",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus, wajib diisi",
                         "name": "id_case",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Suspect ID (UUID)",
+                        "description": "UUID tersangka, wajib diisi",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -416,14 +596,14 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Delete Suspect Data",
+                        "description": "Berhasil menghapus tersangka",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -434,47 +614,45 @@ const docTemplate = `{
         },
         "/api/suspect/get-all/{id_case}": {
             "get": {
-                "description": "Retrieve all suspects for a specific case",
+                "description": "Endpoint ini mengambil seluruh data tersangka untuk kasus tertentu dengan dukungan paginasi. Cocok untuk monitoring investigasi. Asumsi: ID kasus valid.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Suspects"
                 ],
-                "summary": "Get all suspects",
+                "summary": "Mendapatkan seluruh data tersangka pada kasus",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus, wajib diisi",
                         "name": "id_case",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "Page number",
+                        "description": "Nomor halaman, default 1",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "Items per page",
+                        "description": "Jumlah item per halaman, default 10",
                         "name": "limit",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Get Suspect Data",
+                        "description": "Berhasil mendapatkan daftar tersangka beserta metadata paginasi",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -485,25 +663,25 @@ const docTemplate = `{
         },
         "/api/suspect/get-id/{id}/{id_case}": {
             "get": {
-                "description": "Retrieve a specific suspect from a case",
+                "description": "Endpoint ini mengambil data tersangka spesifik berdasarkan UUID pada kasus tertentu. Cocok untuk detail view investigasi. Asumsi: ID kasus dan ID tersangka valid.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Suspects"
                 ],
-                "summary": "Get suspect by ID",
+                "summary": "Mendapatkan tersangka berdasarkan ID pada kasus",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus, wajib diisi",
                         "name": "id_case",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Suspect ID (UUID)",
+                        "description": "UUID tersangka, wajib diisi",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -511,14 +689,14 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Get Suspect Data",
+                        "description": "Berhasil mendapatkan data tersangka",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -529,9 +707,9 @@ const docTemplate = `{
         },
         "/api/suspect/update/{id}/{id_case}": {
             "put": {
-                "description": "Update an existing suspect information",
+                "description": "Endpoint ini memperbarui data tersangka pada kasus tertentu berdasarkan ID, mendukung perubahan seluruh atribut utama. Validasi dan error handling dilakukan secara ketat. Asumsi: ID kasus dan ID tersangka valid.",
                 "consumes": [
-                    "application/x-www-form-urlencoded"
+                    "application/json"
                 ],
                 "produces": [
                     "application/json"
@@ -539,73 +717,170 @@ const docTemplate = `{
                 "tags": [
                     "Suspects"
                 ],
-                "summary": "Update suspect data",
+                "summary": "Memperbarui data tersangka",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Case ID (UUID)",
+                        "description": "UUID kasus, wajib diisi",
                         "name": "id_case",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Suspect ID (UUID)",
+                        "description": "UUID tersangka, wajib diisi",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "ID Card Number",
-                        "name": "id_card_number",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Full Name",
-                        "name": "full_name",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Address",
-                        "name": "address",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Alibi",
-                        "name": "alibi",
-                        "in": "formData",
-                        "required": true
+                        "description": "Payload tersangka dalam format JSON.\n\nField 'gender' hanya dapat bernilai: \n- 'Male': Menunjukkan jenis kelamin laki-laki. Dalam perspektif kriminologi dan psikologi forensik, identifikasi gender ini penting untuk analisis pola perilaku, kecenderungan kriminal, serta pendekatan interogasi dan perlindungan hukum yang relevan. Gender laki-laki sering dikaitkan dengan karakteristik fisik dan psikososial tertentu yang dapat mempengaruhi jalannya investigasi.\n- 'Female': Menunjukkan jenis kelamin perempuan. Gender ini memiliki implikasi signifikan dalam proses investigasi, terutama terkait perlindungan saksi, pendekatan psikologis, dan sensitivitas terhadap isu gender-based violence. Penanganan tersangka atau saksi perempuan menuntut penerapan prinsip non-diskriminasi dan perlakuan khusus sesuai standar hak asasi manusia.\n\nField 'status' hanya dapat bernilai: \n- 'Arrested': Status ini menandakan bahwa tersangka telah resmi ditahan oleh aparat penegak hukum. Dalam sistem peradilan pidana, status ini menuntut pemenuhan hak-hak hukum tersangka, termasuk akses bantuan hukum dan perlindungan dari perlakuan sewenang-wenang. Penahanan merupakan fase kritis yang mempengaruhi kelanjutan proses investigasi dan peradilan.\n- 'Released': Menunjukkan bahwa tersangka telah dibebaskan, baik karena tidak cukup bukti, alasan hukum, atau pertimbangan kemanusiaan. Status ini penting dalam evaluasi efektivitas investigasi dan menjadi indikator penerapan asas praduga tak bersalah.\n- 'Wanted': Status ini berarti tersangka sedang dalam pencarian aktif oleh aparat penegak hukum. Penetapan status 'wanted' memerlukan koordinasi lintas lembaga, publikasi identitas, dan penggunaan sumber daya intelijen untuk penangkapan.\n- 'Under Investigation': Menandakan bahwa individu masih dalam proses penyelidikan dan status hukumnya belum final. Status ini menuntut kehati-hatian dalam publikasi data dan perlakuan terhadap individu, guna menjaga asas praduga tak bersalah dan integritas proses hukum.\n- 'Eyewitness': Status ini diberikan kepada individu yang berperan sebagai saksi mata dalam kasus. Saksi mata memiliki nilai probatif tinggi dalam pembuktian perkara, sehingga perlindungan dan penanganan profesional sangat diperlukan untuk menjaga keamanan dan keabsahan kesaksian.",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/suspects_request.Suspects_Request"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success Update Suspect Data",
+                        "description": "Berhasil memperbarui data tersangka",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Permintaan tidak valid; data input salah",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Terjadi kesalahan sistem internal",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "cases_request.Cases_Request": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "case_description": {
+                    "type": "string"
+                },
+                "case_title": {
+                    "type": "string"
+                },
+                "detective_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "incident_date": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Open",
+                        "In Progress",
+                        "Closed"
+                    ]
+                }
+            }
+        },
+        "detective_request.Detective_Request": {
+            "type": "object",
+            "required": [
+                "investigation_style"
+            ],
+            "properties": {
+                "badge_number": {
+                    "type": "string"
+                },
+                "department": {
+                    "type": "string"
+                },
+                "investigation_style": {
+                    "type": "string",
+                    "enum": [
+                        "Evidence-Based Investigation",
+                        "Interview-Based Investigation",
+                        "Undercover Investigation",
+                        "Follow The Money Investigation",
+                        "Report-Based Investigation"
+                    ]
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "station": {
+                    "type": "string"
+                }
+            }
+        },
+        "suspects_request.Suspects_Request": {
+            "type": "object",
+            "required": [
+                "gender",
+                "status"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "alibi": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "Male",
+                        "Female"
+                    ]
+                },
+                "id_card_number": {
+                    "type": "string"
+                },
+                "occupation": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Arrested",
+                        "Released",
+                        "Wanted",
+                        "Under Investigation",
+                        "Eyewitness"
+                    ]
                 }
             }
         }

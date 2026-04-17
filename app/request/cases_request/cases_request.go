@@ -6,11 +6,11 @@ import (
 )
 
 type Cases_Request struct {
-	Case_Title       *string  `json:"case_title"`
-	Case_Description *string  `json:"case_description"`
-	Incident_Date    *string  `json:"incident_date"`
-	Location         *string  `json:"location"`
-	Status           *string  `json:"status" binding:"required,oneof='Open' 'In Progress' 'Closed'"`
+	Case_Title       string   `json:"case_title"`
+	Case_Description string   `json:"case_description"`
+	Incident_Date    string   `json:"incident_date"`
+	Location         string   `json:"location"`
+	Status           string   `json:"status" binding:"required,oneof='Open' 'In Progress' 'Closed'"`
 	DetectiveIDs     []string `json:"detective_ids"`
 }
 

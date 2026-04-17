@@ -1,0 +1,44 @@
+.git
+.gitignore
+
+# Local/editor metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Build outputs and binaries
+bin/
+build/
+dist/
+out/
+tmp/
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.o
+*.test
+
+# Logs and env files
+*.log
+.env
+.env.*
+
+# Dependency/vendor caches (if not used for offline build)
+vendor/
+
+# Test and coverage artifacts
+coverage/
+*.cover
+*.cov
+coverage.out
+
+# Optional docs and misc files not needed for image build context
+README.md
+*.md

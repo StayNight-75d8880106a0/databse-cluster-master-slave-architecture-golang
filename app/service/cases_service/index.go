@@ -48,6 +48,10 @@ func (s *Cases_Service) Create(cases_dto *cases_request.Cases_Dto) (cases_reques
 		return cases_request.Cases_Response{}, helper.NewBadRequest("Detective Cannot Be Empty!")
 	}
 
+	if !helper.IsValidCaseStatus(*cases_dto.Status) {
+		return cases_request.Cases_Response{}, helper.NewBadRequest("Invalid Case Status")
+	}
+
 	year := time.Now().Year()
 	month := time.Now().Month()
 
@@ -93,7 +97,7 @@ func (s *Cases_Service) Create(cases_dto *cases_request.Cases_Dto) (cases_reques
 
 }
 
-func (s *Cases_Service) GetAll(page int, limit int) ([]cases_request.Cases_Response, helper.PaginationMeta, error) {
+func (s *Cases_Service) GetAll(page int, limit int, search string) ([]cases_request.Cases_Response, helper.PaginationMeta, error) {
 
 	if page <= 0 {
 		page = 1
@@ -104,7 +108,7 @@ func (s *Cases_Service) GetAll(page int, limit int) ([]cases_request.Cases_Respo
 
 	offset := (page - 1) * limit
 
-	cases, totalData, errGet := s.repository.GetAll(limit, offset)
+	cases, totalData, errGet := s.repository.GetAll(limit, offset, search)
 
 	if errGet != nil {
 		return []cases_request.Cases_Response{}, helper.PaginationMeta{}, helper.NewInternalServerError("An error occurred while get case data : " + errGet.Error())
@@ -224,6 +228,10 @@ func (s *Cases_Service) Update(ID string, cases_dto *cases_request.Cases_Dto) (c
 		return cases_request.Cases_Response{}, helper.NewInternalServerError("An error occurred while adding detective id data : " + errGetDetective.Error())
 	}
 
+	if !helper.IsValidCaseStatus(*cases_dto.Status) {
+		return cases_request.Cases_Response{}, helper.NewBadRequest("Invalid Case Status")
+	}
+
 	cases := &models.Cases{
 		Case_Title:       cases_dto.Case_Title,
 		Case_Description: cases_dto.Case_Description,
@@ -277,5 +285,35 @@ func (s *Cases_Service) Delete(ID string) error {
 	}
 
 	return nil
+
+}
+
+func (s *Cases_Service) GetCasesLatestUpdate() ([]cases_request.Cases_Response, error) {
+
+	cases, errGet := s.repository.GetCasesLatestUpdate()
+
+	if errGet != nil {
+		return []cases_request.Cases_Response{}, helper.NewInternalServerError("An error occurred while get case data : " + errGet.Error())
+	}
+
+	var responses []cases_request.Cases_Response
+
+	for _, value := range cases {
+		response := cases_request.Cases_Response{
+			Case_Number:      value.Case_Number,
+			Case_Title:       value.Case_Title,
+			Case_Description: value.Case_Description,
+			Incident_Date:    time.Time(value.Incident_Date),
+			Location:         value.Location,
+			Status:           (*string)(&value.Status),
+			CreatedAt:        value.CreatedAt,
+			UpdatedAt:        value.UpdatedAt,
+			Suspects:         value.Suspects,
+			Detective:        value.Detective,
+		}
+		responses = append(responses, response)
+	}
+
+	return responses, nil
 
 }

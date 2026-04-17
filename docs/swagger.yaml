@@ -1,41 +1,126 @@
+definitions:
+  cases_request.Cases_Request:
+    properties:
+      case_description:
+        type: string
+      case_title:
+        type: string
+      detective_ids:
+        items:
+          type: string
+        type: array
+      incident_date:
+        type: string
+      location:
+        type: string
+      status:
+        enum:
+        - Open
+        - In Progress
+        - Closed
+        type: string
+    required:
+    - status
+    type: object
+  detective_request.Detective_Request:
+    properties:
+      badge_number:
+        type: string
+      department:
+        type: string
+      investigation_style:
+        enum:
+        - Evidence-Based Investigation
+        - Interview-Based Investigation
+        - Undercover Investigation
+        - Follow The Money Investigation
+        - Report-Based Investigation
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      station:
+        type: string
+    required:
+    - investigation_style
+    type: object
+  suspects_request.Suspects_Request:
+    properties:
+      address:
+        type: string
+      alibi:
+        type: string
+      date_of_birth:
+        type: string
+      full_name:
+        type: string
+      gender:
+        enum:
+        - Male
+        - Female
+        type: string
+      id_card_number:
+        type: string
+      occupation:
+        type: string
+      phone:
+        type: string
+      status:
+        enum:
+        - Arrested
+        - Released
+        - Wanted
+        - Under Investigation
+        - Eyewitness
+        type: string
+    required:
+    - gender
+    - status
+    type: object
 info:
   contact: {}
 paths:
   /api/cases:
     get:
-      description: Retrieve all cases from the database
+      description: 'Endpoint ini mengambil seluruh data kasus dengan dukungan paginasi
+        dan pencarian judul. Cocok untuk monitoring dan analisis kasus. Asumsi: paginasi
+        default 10 item/halaman.'
       parameters:
-      - default: 1
-        description: Page number
+      - description: Nomor halaman, default 1
         in: query
         name: page
         type: integer
-      - default: 10
-        description: Items per page
+      - description: Jumlah item per halaman, default 10
         in: query
         name: limit
         type: integer
+      - description: Pencarian berdasarkan judul kasus
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Success Get Cases
+          description: Berhasil mendapatkan daftar kasus beserta metadata paginasi
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Get all cases
+      summary: Mendapatkan seluruh data kasus
       tags:
       - Cases
   /api/cases/{id}:
     get:
-      description: Retrieve a specific case using its UUID
+      description: 'Endpoint ini mengambil data kasus spesifik berdasarkan UUID. Cocok
+        untuk detail view atau proses investigasi lanjutan. Asumsi: ID valid dan eksis.'
       parameters:
-      - description: Case ID (UUID)
+      - description: UUID kasus yang dicari
         in: path
         name: id
         required: true
@@ -44,95 +129,91 @@ paths:
       - application/json
       responses:
         "200":
-          description: Success Get Case By Id
+          description: Berhasil mendapatkan data kasus
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Get case by ID
+      summary: Mendapatkan kasus berdasarkan ID
       tags:
       - Cases
-  /api/cases/case-number/{number}:
+  /api/cases/count:
     get:
-      description: Retrieve a case using its case number
-      parameters:
-      - description: Case Number
-        in: path
-        name: number
-        required: true
-        type: string
+      description: 'Endpoint ini mengambil jumlah total kasus yang terdaftar dalam
+        sistem. Cocok untuk statistik dan monitoring. Asumsi: data konsisten.'
       produces:
       - application/json
       responses:
         "200":
-          description: Success Get Case By Case Number
+          description: Berhasil mendapatkan jumlah kasus
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Get case by case number
+      summary: Mendapatkan jumlah kasus
       tags:
       - Cases
   /api/cases/create:
     post:
       consumes:
-      - application/x-www-form-urlencoded
-      description: Create a new case with title, description, incident date, and location
+      - application/json
+      description: 'Endpoint ini bertanggung jawab untuk pembuatan kasus baru, termasuk
+        validasi, transformasi input, dan penanganan error. Proses ini krusial dalam
+        workflow investigasi. Asumsi: data valid, judul unik per lokasi dan waktu.'
       parameters:
-      - description: Case Title
-        in: formData
-        name: case_title
+      - description: "Payload kasus dalam format JSON.\n\nField 'status' hanya dapat
+          bernilai salah satu dari: \n- 'Open': Menandakan kasus baru dibuka dan seluruh
+          proses investigasi masih dalam tahap inisiasi. Status ini merepresentasikan
+          fase awal dalam siklus hidup kasus, di mana pengumpulan bukti dan identifikasi
+          pihak terkait menjadi prioritas utama. \n- 'In Progress': Mengindikasikan
+          bahwa kasus sedang dalam proses investigasi aktif. Pada tahap ini, seluruh
+          sumber daya dialokasikan untuk analisis, pemeriksaan saksi, dan pengembangan
+          hipotesis. Status ini menuntut adanya pembaruan berkala dan monitoring ketat
+          terhadap perkembangan kasus. \n- 'Closed': Menunjukkan bahwa seluruh proses
+          investigasi telah selesai, baik karena kasus telah terpecahkan, tidak ditemukan
+          cukup bukti, atau alasan administratif lainnya. Status ini menandai berakhirnya
+          siklus investigasi dan seluruh data kasus diarsipkan untuk keperluan audit
+          dan pembelajaran institusional."
+        in: body
+        name: request
         required: true
-        type: string
-      - description: Case Description
-        in: formData
-        name: case_description
-        required: true
-        type: string
-      - description: Incident Date (YYYY-MM-DD)
-        in: formData
-        name: incident_date
-        required: true
-        type: string
-      - description: Case Location
-        in: formData
-        name: location
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/cases_request.Cases_Request'
       produces:
       - application/json
       responses:
         "201":
-          description: Success Create Case
+          description: Kasus berhasil dibuat; response berisi data kasus baru
           schema:
             additionalProperties: true
             type: object
         "404":
-          description: Bad Request
+          description: Permintaan tidak valid; data input salah
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Create a new case
+      summary: Membuat entitas kasus baru
       tags:
       - Cases
   /api/cases/delete/{id}:
     delete:
-      description: Delete a case by its ID
+      description: 'Endpoint ini menghapus data kasus berdasarkan ID. Proses ini tidak
+        dapat dibatalkan dan berdampak pada data terkait. Asumsi: ID valid dan eksis.'
       parameters:
-      - description: Case ID (UUID)
+      - description: UUID kasus yang akan dihapus
         in: path
         name: id
         required: true
@@ -141,169 +222,102 @@ paths:
       - application/json
       responses:
         "200":
-          description: Success Delete Case
+          description: Berhasil menghapus kasus
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Delete a case
+      summary: Menghapus data kasus
+      tags:
+      - Cases
+  /api/cases/latest:
+    get:
+      description: Endpoint ini mengambil seluruh data kasus dengan dukungan paginasi
+        dan pencarian judul. Cocok untuk monitoring dan analisis kasus.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil mendapatkan daftar kasus terbaru dengan maksimal 5
+            data
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Mendapatkan seluruh data kasus yang terakhir diperbarui
       tags:
       - Cases
   /api/cases/update/{id}:
     put:
       consumes:
-      - application/x-www-form-urlencoded
-      description: Update an existing case with new title, description, incident date,
-        and location
+      - application/json
+      description: 'Endpoint ini memperbarui data kasus berdasarkan ID, mendukung
+        perubahan seluruh atribut utama. Validasi dan error handling dilakukan secara
+        ketat. Asumsi: ID valid, judul tetap unik.'
       parameters:
-      - description: Case ID (UUID)
+      - description: UUID kasus yang akan diperbarui
         in: path
         name: id
         required: true
         type: string
-      - description: Case Title
-        in: formData
-        name: case_title
+      - description: "Payload kasus dalam format JSON.\n\nField 'status' hanya dapat
+          bernilai salah satu dari: \n- 'Open': Menandakan kasus baru dibuka dan seluruh
+          proses investigasi masih dalam tahap inisiasi. Status ini merepresentasikan
+          fase awal dalam siklus hidup kasus, di mana pengumpulan bukti dan identifikasi
+          pihak terkait menjadi prioritas utama. \n- 'In Progress': Mengindikasikan
+          bahwa kasus sedang dalam proses investigasi aktif. Pada tahap ini, seluruh
+          sumber daya dialokasikan untuk analisis, pemeriksaan saksi, dan pengembangan
+          hipotesis. Status ini menuntut adanya pembaruan berkala dan monitoring ketat
+          terhadap perkembangan kasus. \n- 'Closed': Menunjukkan bahwa seluruh proses
+          investigasi telah selesai, baik karena kasus telah terpecahkan, tidak ditemukan
+          cukup bukti, atau alasan administratif lainnya. Status ini menandai berakhirnya
+          siklus investigasi dan seluruh data kasus diarsipkan untuk keperluan audit
+          dan pembelajaran institusional."
+        in: body
+        name: request
         required: true
-        type: string
-      - description: Case Description
-        in: formData
-        name: case_description
-        required: true
-        type: string
-      - description: Incident Date (YYYY-MM-DD)
-        in: formData
-        name: incident_date
-        required: true
-        type: string
-      - description: Case Location
-        in: formData
-        name: location
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/cases_request.Cases_Request'
       produces:
       - application/json
       responses:
         "200":
-          description: Success Update Case
+          description: Berhasil memperbarui data kasus
           schema:
             additionalProperties: true
             type: object
         "404":
-          description: Bad Request
+          description: Permintaan tidak valid; data input salah
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Update a case
+      summary: Memperbarui data kasus
       tags:
       - Cases
-  /api/suspect/create/{id_case}:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: Create a new suspect for a specific case
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: ID Card Number
-        in: formData
-        name: id_card_number
-        required: true
-        type: string
-      - description: Full Name
-        in: formData
-        name: full_name
-        required: true
-        type: string
-      - description: Address
-        in: formData
-        name: address
-        required: true
-        type: string
-      - description: Alibi
-        in: formData
-        name: alibi
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Success Create Suspect
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Create a new suspect
-      tags:
-      - Suspects
-  /api/suspect/delete/{id}/{id_case}:
-    delete:
-      description: Delete a suspect from a case
-      parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: Suspect ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success Delete Suspect Data
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Delete suspect
-      tags:
-      - Suspects
-  /api/suspect/get-all/{id_case}:
+  /api/detective:
     get:
-      description: Retrieve all suspects for a specific case
+      description: 'Endpoint ini mengambil seluruh data detektif dengan dukungan paginasi.
+        Cocok untuk monitoring personel investigasi. Asumsi: data konsisten, paginasi
+        default 10 item per halaman.'
       parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - default: 1
-        description: Page number
+      - description: Nomor halaman, default 1
         in: query
         name: page
         type: integer
-      - default: 10
-        description: Items per page
+      - description: Jumlah item per halaman, default 10
         in: query
         name: limit
         type: integer
@@ -311,28 +325,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Success Get Suspect Data
+          description: Berhasil mendapatkan daftar detektif beserta metadata paginasi
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Get all suspects
+      summary: Mendapatkan seluruh data detektif
       tags:
-      - Suspects
-  /api/suspect/get-id/{id}/{id_case}:
+      - Detectives
+  /api/detective/{id}:
     get:
-      description: Retrieve a specific suspect from a case
+      description: 'Endpoint ini mengambil data detektif spesifik berdasarkan UUID.
+        Cocok untuk detail view atau proses assignment kasus. Asumsi: ID valid dan
+        eksis.'
       parameters:
-      - description: Case ID (UUID)
-        in: path
-        name: id_case
-        required: true
-        type: string
-      - description: Suspect ID (UUID)
+      - description: UUID detektif yang dicari
         in: path
         name: id
         required: true
@@ -341,73 +352,394 @@ paths:
       - application/json
       responses:
         "200":
-          description: Success Get Suspect Data
+          description: Berhasil mendapatkan data detektif
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Get suspect by ID
+      summary: Mendapatkan detektif berdasarkan ID
+      tags:
+      - Detectives
+  /api/detective/create:
+    post:
+      consumes:
+      - application/json
+      description: 'Endpoint ini melakukan proses pembuatan detektif baru, termasuk
+        validasi data, transformasi input, dan penanganan error. Proses ini penting
+        untuk memastikan integritas data personel investigasi. Asumsi: data valid,
+        badge_number unik. Batasan: hanya admin dapat akses.'
+      parameters:
+      - description: "Payload detektif dalam format JSON.\n\nField 'investigation_style'
+          hanya dapat bernilai salah satu dari: \n- 'Evidence-Based Investigation':
+          Pendekatan investigasi yang menitikberatkan pada pengumpulan, analisis,
+          dan interpretasi bukti fisik secara sistematis. Metode ini mengedepankan
+          objektivitas dan validitas ilmiah dalam setiap tahapan investigasi. \n-
+          'Interview-Based Investigation': Strategi investigasi yang berfokus pada
+          teknik wawancara mendalam terhadap saksi, korban, dan tersangka. Pendekatan
+          ini menuntut keterampilan komunikasi interpersonal dan analisis psikologis
+          tingkat tinggi. \n- 'Undercover Investigation': Metode investigasi di mana
+          detektif menyamar untuk memperoleh informasi yang tidak dapat diakses secara
+          terbuka. Pendekatan ini sangat berisiko namun efektif dalam mengungkap kejahatan
+          terorganisir. \n- 'Follow The Money Investigation': Investigasi yang memprioritaskan
+          pelacakan aliran dana untuk mengidentifikasi motif, pelaku, dan jaringan
+          kejahatan. Pendekatan ini sangat relevan dalam kasus korupsi dan kejahatan
+          finansial. \n- 'Report-Based Investigation': Pendekatan yang mengandalkan
+          analisis laporan, dokumen, dan data administratif sebagai sumber utama informasi.
+          Cocok untuk kasus yang membutuhkan audit forensik dan penelusuran administratif
+          secara mendalam."
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/detective_request.Detective_Request'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Detektif berhasil dibuat; response berisi data detektif baru
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Permintaan tidak valid; data input salah atau format tidak
+            sesuai
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Membuat entitas detektif baru
+      tags:
+      - Detectives
+  /api/detective/delete/{id}:
+    delete:
+      description: 'Endpoint ini menghapus data detektif berdasarkan ID. Proses ini
+        tidak dapat dibatalkan dan berdampak pada assignment kasus terkait. Asumsi:
+        ID valid dan eksis.'
+      parameters:
+      - description: UUID detektif yang akan dihapus
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil menghapus detektif
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Menghapus data detektif
+      tags:
+      - Detectives
+  /api/detective/update/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 'Endpoint ini memperbarui data detektif berdasarkan ID, mendukung
+        perubahan seluruh atribut utama. Validasi dan error handling dilakukan secara
+        ketat. Asumsi: ID valid, badge_number tetap unik.'
+      parameters:
+      - description: UUID detektif yang akan diperbarui
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: "Payload detektif dalam format JSON.\n\nField 'investigation_style'
+          hanya dapat bernilai salah satu dari: \n- 'Evidence-Based Investigation':
+          Pendekatan investigasi yang menitikberatkan pada pengumpulan, analisis,
+          dan interpretasi bukti fisik secara sistematis. Metode ini mengedepankan
+          objektivitas dan validitas ilmiah dalam setiap tahapan investigasi. \n-
+          'Interview-Based Investigation': Strategi investigasi yang berfokus pada
+          teknik wawancara mendalam terhadap saksi, korban, dan tersangka. Pendekatan
+          ini menuntut keterampilan komunikasi interpersonal dan analisis psikologis
+          tingkat tinggi. \n- 'Undercover Investigation': Metode investigasi di mana
+          detektif menyamar untuk memperoleh informasi yang tidak dapat diakses secara
+          terbuka. Pendekatan ini sangat berisiko namun efektif dalam mengungkap kejahatan
+          terorganisir. \n- 'Follow The Money Investigation': Investigasi yang memprioritaskan
+          pelacakan aliran dana untuk mengidentifikasi motif, pelaku, dan jaringan
+          kejahatan. Pendekatan ini sangat relevan dalam kasus korupsi dan kejahatan
+          finansial. \n- 'Report-Based Investigation': Pendekatan yang mengandalkan
+          analisis laporan, dokumen, dan data administratif sebagai sumber utama informasi.
+          Cocok untuk kasus yang membutuhkan audit forensik dan penelusuran administratif
+          secara mendalam."
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/detective_request.Detective_Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil memperbarui data detektif
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Permintaan tidak valid; data input salah
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Memperbarui data detektif
+      tags:
+      - Detectives
+  /api/suspect/create/{id_case}:
+    post:
+      consumes:
+      - application/json
+      description: 'Endpoint ini bertanggung jawab untuk pembuatan tersangka baru
+        pada kasus tertentu, termasuk validasi, transformasi input, dan penanganan
+        error. Proses ini penting untuk integritas data investigasi. Asumsi: ID kasus
+        valid, NIK unik.'
+      parameters:
+      - description: UUID kasus, wajib diisi
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: "Payload tersangka dalam format JSON.\n\nField 'gender' hanya
+          dapat bernilai: \n- 'Male': Menunjukkan jenis kelamin laki-laki. Dalam perspektif
+          kriminologi dan psikologi forensik, identifikasi gender ini penting untuk
+          analisis pola perilaku, kecenderungan kriminal, serta pendekatan interogasi
+          dan perlindungan hukum yang relevan. Gender laki-laki sering dikaitkan dengan
+          karakteristik fisik dan psikososial tertentu yang dapat mempengaruhi jalannya
+          investigasi.\n- 'Female': Menunjukkan jenis kelamin perempuan. Gender ini
+          memiliki implikasi signifikan dalam proses investigasi, terutama terkait
+          perlindungan saksi, pendekatan psikologis, dan sensitivitas terhadap isu
+          gender-based violence. Penanganan tersangka atau saksi perempuan menuntut
+          penerapan prinsip non-diskriminasi dan perlakuan khusus sesuai standar hak
+          asasi manusia.\n\nField 'status' hanya dapat bernilai: \n- 'Arrested': Status
+          ini menandakan bahwa tersangka telah resmi ditahan oleh aparat penegak hukum.
+          Dalam sistem peradilan pidana, status ini menuntut pemenuhan hak-hak hukum
+          tersangka, termasuk akses bantuan hukum dan perlindungan dari perlakuan
+          sewenang-wenang. Penahanan merupakan fase kritis yang mempengaruhi kelanjutan
+          proses investigasi dan peradilan.\n- 'Released': Menunjukkan bahwa tersangka
+          telah dibebaskan, baik karena tidak cukup bukti, alasan hukum, atau pertimbangan
+          kemanusiaan. Status ini penting dalam evaluasi efektivitas investigasi dan
+          menjadi indikator penerapan asas praduga tak bersalah.\n- 'Wanted': Status
+          ini berarti tersangka sedang dalam pencarian aktif oleh aparat penegak hukum.
+          Penetapan status 'wanted' memerlukan koordinasi lintas lembaga, publikasi
+          identitas, dan penggunaan sumber daya intelijen untuk penangkapan.\n- 'Under
+          Investigation': Menandakan bahwa individu masih dalam proses penyelidikan
+          dan status hukumnya belum final. Status ini menuntut kehati-hatian dalam
+          publikasi data dan perlakuan terhadap individu, guna menjaga asas praduga
+          tak bersalah dan integritas proses hukum.\n- 'Eyewitness': Status ini diberikan
+          kepada individu yang berperan sebagai saksi mata dalam kasus. Saksi mata
+          memiliki nilai probatif tinggi dalam pembuktian perkara, sehingga perlindungan
+          dan penanganan profesional sangat diperlukan untuk menjaga keamanan dan
+          keabsahan kesaksian."
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/suspects_request.Suspects_Request'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Permintaan tidak valid; data input salah
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Membuat entitas tersangka baru
+      tags:
+      - Suspects
+  /api/suspect/delete/{id}/{id_case}:
+    delete:
+      description: 'Endpoint ini menghapus data tersangka berdasarkan ID pada kasus
+        tertentu. Proses ini tidak dapat dibatalkan dan berdampak pada data investigasi
+        terkait. Asumsi: ID kasus dan ID tersangka valid.'
+      parameters:
+      - description: UUID kasus, wajib diisi
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: UUID tersangka, wajib diisi
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil menghapus tersangka
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Menghapus data tersangka dari kasus
+      tags:
+      - Suspects
+  /api/suspect/get-all/{id_case}:
+    get:
+      description: 'Endpoint ini mengambil seluruh data tersangka untuk kasus tertentu
+        dengan dukungan paginasi. Cocok untuk monitoring investigasi. Asumsi: ID kasus
+        valid.'
+      parameters:
+      - description: UUID kasus, wajib diisi
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: Nomor halaman, default 1
+        in: query
+        name: page
+        type: integer
+      - description: Jumlah item per halaman, default 10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil mendapatkan daftar tersangka beserta metadata paginasi
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Mendapatkan seluruh data tersangka pada kasus
+      tags:
+      - Suspects
+  /api/suspect/get-id/{id}/{id_case}:
+    get:
+      description: 'Endpoint ini mengambil data tersangka spesifik berdasarkan UUID
+        pada kasus tertentu. Cocok untuk detail view investigasi. Asumsi: ID kasus
+        dan ID tersangka valid.'
+      parameters:
+      - description: UUID kasus, wajib diisi
+        in: path
+        name: id_case
+        required: true
+        type: string
+      - description: UUID tersangka, wajib diisi
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil mendapatkan data tersangka
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Terjadi kesalahan sistem internal
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Mendapatkan tersangka berdasarkan ID pada kasus
       tags:
       - Suspects
   /api/suspect/update/{id}/{id_case}:
     put:
       consumes:
-      - application/x-www-form-urlencoded
-      description: Update an existing suspect information
+      - application/json
+      description: 'Endpoint ini memperbarui data tersangka pada kasus tertentu berdasarkan
+        ID, mendukung perubahan seluruh atribut utama. Validasi dan error handling
+        dilakukan secara ketat. Asumsi: ID kasus dan ID tersangka valid.'
       parameters:
-      - description: Case ID (UUID)
+      - description: UUID kasus, wajib diisi
         in: path
         name: id_case
         required: true
         type: string
-      - description: Suspect ID (UUID)
+      - description: UUID tersangka, wajib diisi
         in: path
         name: id
         required: true
         type: string
-      - description: ID Card Number
-        in: formData
-        name: id_card_number
+      - description: "Payload tersangka dalam format JSON.\n\nField 'gender' hanya
+          dapat bernilai: \n- 'Male': Menunjukkan jenis kelamin laki-laki. Dalam perspektif
+          kriminologi dan psikologi forensik, identifikasi gender ini penting untuk
+          analisis pola perilaku, kecenderungan kriminal, serta pendekatan interogasi
+          dan perlindungan hukum yang relevan. Gender laki-laki sering dikaitkan dengan
+          karakteristik fisik dan psikososial tertentu yang dapat mempengaruhi jalannya
+          investigasi.\n- 'Female': Menunjukkan jenis kelamin perempuan. Gender ini
+          memiliki implikasi signifikan dalam proses investigasi, terutama terkait
+          perlindungan saksi, pendekatan psikologis, dan sensitivitas terhadap isu
+          gender-based violence. Penanganan tersangka atau saksi perempuan menuntut
+          penerapan prinsip non-diskriminasi dan perlakuan khusus sesuai standar hak
+          asasi manusia.\n\nField 'status' hanya dapat bernilai: \n- 'Arrested': Status
+          ini menandakan bahwa tersangka telah resmi ditahan oleh aparat penegak hukum.
+          Dalam sistem peradilan pidana, status ini menuntut pemenuhan hak-hak hukum
+          tersangka, termasuk akses bantuan hukum dan perlindungan dari perlakuan
+          sewenang-wenang. Penahanan merupakan fase kritis yang mempengaruhi kelanjutan
+          proses investigasi dan peradilan.\n- 'Released': Menunjukkan bahwa tersangka
+          telah dibebaskan, baik karena tidak cukup bukti, alasan hukum, atau pertimbangan
+          kemanusiaan. Status ini penting dalam evaluasi efektivitas investigasi dan
+          menjadi indikator penerapan asas praduga tak bersalah.\n- 'Wanted': Status
+          ini berarti tersangka sedang dalam pencarian aktif oleh aparat penegak hukum.
+          Penetapan status 'wanted' memerlukan koordinasi lintas lembaga, publikasi
+          identitas, dan penggunaan sumber daya intelijen untuk penangkapan.\n- 'Under
+          Investigation': Menandakan bahwa individu masih dalam proses penyelidikan
+          dan status hukumnya belum final. Status ini menuntut kehati-hatian dalam
+          publikasi data dan perlakuan terhadap individu, guna menjaga asas praduga
+          tak bersalah dan integritas proses hukum.\n- 'Eyewitness': Status ini diberikan
+          kepada individu yang berperan sebagai saksi mata dalam kasus. Saksi mata
+          memiliki nilai probatif tinggi dalam pembuktian perkara, sehingga perlindungan
+          dan penanganan profesional sangat diperlukan untuk menjaga keamanan dan
+          keabsahan kesaksian."
+        in: body
+        name: request
         required: true
-        type: string
-      - description: Full Name
-        in: formData
-        name: full_name
-        required: true
-        type: string
-      - description: Address
-        in: formData
-        name: address
-        required: true
-        type: string
-      - description: Alibi
-        in: formData
-        name: alibi
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/suspects_request.Suspects_Request'
       produces:
       - application/json
       responses:
         "200":
-          description: Success Update Suspect Data
+          description: Berhasil memperbarui data tersangka
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: Permintaan tidak valid; data input salah
           schema:
             additionalProperties: true
             type: object
         "500":
-          description: Internal Server Error
+          description: Terjadi kesalahan sistem internal
           schema:
             additionalProperties: true
             type: object
-      summary: Update suspect data
+      summary: Memperbarui data tersangka
       tags:
       - Suspects
 swagger: "2.0"

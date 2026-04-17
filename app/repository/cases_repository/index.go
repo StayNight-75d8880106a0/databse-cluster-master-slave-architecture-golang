@@ -29,19 +29,29 @@ func (repo *Cases_Repository) Create(cases *models.Cases) error {
 
 }
 
-func (repo *Cases_Repository) GetAll(limit int, offset int) ([]models.Cases, int64, error) {
+func (repo *Cases_Repository) GetAll(limit int, offset int, search string) ([]models.Cases, int64, error) {
 
 	var cases []models.Cases
 
 	var count int64
 
-	errCount := repo.slave.Table("cases").Count(&count).Error
+	baseQuery := repo.slave.Table("cases")
+
+	if search != "" {
+		baseQuery = baseQuery.Where("case_title LIKE ?", search+"%")
+	}
+
+	queryCount := baseQuery.Session(&gorm.Session{})
+
+	errCount := queryCount.Count(&count).Error
 
 	if errCount != nil {
 		return nil, 0, errCount
 	}
 
-	errGet := repo.slave.Table("cases").Preload("Suspects").Preload("Detective").Limit(limit).Offset(offset).Find(&cases).Error
+	queryGet := baseQuery.Session(&gorm.Session{})
+
+	errGet := queryGet.Preload("Suspects").Preload("Detective").Limit(limit).Offset(offset).Find(&cases).Error
 
 	return cases, count, errGet
 
@@ -124,5 +134,15 @@ func (repo *Cases_Repository) UpdateDetectiveRelation(ID string, detectives []mo
 	errUpdate := repo.master.Model(&cases).Association("Detective").Replace(detectives)
 
 	return errUpdate
+
+}
+
+func (repo *Cases_Repository) GetCasesLatestUpdate() ([]models.Cases, error) {
+
+	var cases []models.Cases
+
+	errGet := repo.slave.Table("cases").Preload("Suspects").Preload("Detective").Order("updated_at DESC").Limit(5).Find(&cases).Error
+
+	return cases, errGet
 
 }
