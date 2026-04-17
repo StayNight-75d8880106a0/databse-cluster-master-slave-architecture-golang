@@ -93,6 +93,13 @@ func (s *Cases_Service) Create(cases_dto *cases_request.Cases_Dto) (cases_reques
 		Suspects:         cases.Suspects,
 	}
 
+	if errCreate == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event": "CASES_CREATED",
+			"data":  response,
+		})
+	}
+
 	return *response, nil
 
 }
@@ -264,6 +271,13 @@ func (s *Cases_Service) Update(ID string, cases_dto *cases_request.Cases_Dto) (c
 		Suspects:         GetCases.Suspects,
 	}
 
+	if errUpdate == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event": "CASES_UPDATED",
+			"data":  response,
+		})
+	}
+
 	return *response, nil
 
 }
@@ -282,6 +296,13 @@ func (s *Cases_Service) Delete(ID string) error {
 
 	if errDelete != nil {
 		return helper.NewInternalServerError("An error occurred while delete case data : " + errDelete.Error())
+	}
+
+	if errDelete == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event":   "CASE_DELETED",
+			"message": "Success Delete Case",
+		})
 	}
 
 	return nil

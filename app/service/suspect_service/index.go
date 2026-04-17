@@ -117,6 +117,13 @@ func (s *Suspect_Service) Create(ID_Case string, suspect_dto *suspects_request.S
 		UpdatedAt:      suspect.UpdatedAt,
 	}
 
+	if errCreate == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event": "SUSPECT_CREATED",
+			"data":  response,
+		})
+	}
+
 	return *response, nil
 
 }
@@ -296,6 +303,13 @@ func (s *Suspect_Service) Update(ID string, ID_Case string, suspect_dto *suspect
 		UpdatedAt:      Getsuspect.UpdatedAt,
 	}
 
+	if errUpdate == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event": "SUSPECT_UPDATED",
+			"data":  response,
+		})
+	}
+
 	return *response, nil
 
 }
@@ -320,6 +334,13 @@ func (s *Suspect_Service) Delete(ID string, ID_Case string) error {
 
 	if errDelete != nil {
 		return helper.NewInternalServerError("An error occurred while update suspect data : " + errDelete.Error())
+	}
+
+	if errDelete == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event":   "SUSPECT_DELETED",
+			"message": "Success Delete Suspect",
+		})
 	}
 
 	return nil

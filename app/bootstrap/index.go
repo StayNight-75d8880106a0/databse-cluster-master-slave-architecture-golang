@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"databse-cluster-master-slave-architecture-golang/app/config"
 	"databse-cluster-master-slave-architecture-golang/app/config/app_config"
+	"databse-cluster-master-slave-architecture-golang/app/controller/ws_controller"
 	"databse-cluster-master-slave-architecture-golang/app/database"
 	"databse-cluster-master-slave-architecture-golang/app/registry/cases_registry"
 	"databse-cluster-master-slave-architecture-golang/app/registry/detective_registry"
@@ -44,6 +45,9 @@ func InitAPP() {
 			"Message": "The application is running well. 💮",
 		})
 	})
+
+	wsCtrl := ws_controller.NewWebSocketControllerRegistry()
+	app.GET("/ws", wsCtrl.Connect)
 
 	app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -78,6 +78,13 @@ func (s *Detective_Service) Create(detective_dto *detective_request.Detective_Dt
 		UpdatedAt:           detective.UpdatedAt,
 	}
 
+	if errCreate == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event": "DETECTIVE_CREATED",
+			"data":  response,
+		})
+	}
+
 	return *response, nil
 
 }
@@ -217,6 +224,13 @@ func (s *Detective_Service) Update(ID string, detective_dto *detective_request.D
 		UpdatedAt:           detective.UpdatedAt,
 	}
 
+	if errUpdate == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event": "DETECTIVE_UPDATED",
+			"data":  response,
+		})
+	}
+
 	return *response, nil
 }
 
@@ -234,6 +248,13 @@ func (s *Detective_Service) Delete(ID string) error {
 
 	if errDelete != nil {
 		helper.NewInternalServerError("An error occurred while delete detective data :" + errDelete.Error())
+	}
+
+	if errDelete == nil {
+		helper.Manager.Broadcast(map[string]interface{}{
+			"event":   "DETECTIVE_DELETED",
+			"message": "Success Delete Detective",
+		})
 	}
 
 	return nil
