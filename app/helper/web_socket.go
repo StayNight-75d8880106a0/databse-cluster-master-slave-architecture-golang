@@ -32,3 +32,18 @@ func (m *WSManager) Broadcast(message interface{}) {
 		}
 	}
 }
+
+func (m *WSManager) SendRaw(conn *websocket.Conn, message interface{}) error {
+
+	m.Mu.Lock()
+
+	defer m.Mu.Unlock()
+
+	err := conn.WriteJSON(message)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

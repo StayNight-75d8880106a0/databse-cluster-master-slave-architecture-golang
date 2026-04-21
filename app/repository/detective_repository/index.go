@@ -1,6 +1,7 @@
 package detective_repository
 
 import (
+	"databse-cluster-master-slave-architecture-golang/app/ai/vector_store"
 	"databse-cluster-master-slave-architecture-golang/app/database"
 	"databse-cluster-master-slave-architecture-golang/app/models"
 
@@ -10,19 +11,23 @@ import (
 type Detective_Repository struct {
 	Master *gorm.DB
 	Slave  *gorm.DB
+	vector *vector_store.AI_VectorStore
 }
 
-func NewDetectiveRepositoryRegistry() *Detective_Repository {
+func NewDetectiveRepositoryRegistry(vs *vector_store.AI_VectorStore) *Detective_Repository {
 	dbCluster := database.GetInstanceDbCluster()
 	return &Detective_Repository{
 		Master: dbCluster.Master,
 		Slave:  dbCluster.SlaveDetective,
+		vector: vs,
 	}
 }
 
 func (repo *Detective_Repository) Create(detective *models.Detective) error {
 
 	errCreate := repo.Master.Table("detective").Create(&detective).Error
+
+	go repo.vector.LoadDatabaseSnapshot(repo.Master)
 
 	return errCreate
 
@@ -60,6 +65,8 @@ func (repo *Detective_Repository) Update(ID string, detective *models.Detective)
 
 	errUpdate := repo.Master.Table("detective").Where("id = ?", ID).Updates(detective).Error
 
+	go repo.vector.LoadDatabaseSnapshot(repo.Master)
+
 	return errUpdate
 
 }
@@ -69,6 +76,8 @@ func (repo *Detective_Repository) Delete(ID string) error {
 	var detective *models.Detective
 
 	errDelete := repo.Master.Table("detective").Unscoped().Where("id = ?", ID).Delete(&detective).Error
+
+	go repo.vector.LoadDatabaseSnapshot(repo.Master)
 
 	return errDelete
 

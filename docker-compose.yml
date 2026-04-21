@@ -1,20 +1,32 @@
 services:
   crime_master_postgresql:
-    image: bitnami/postgresql:latest
+    image: pgvector/pgvector:pg17
     container_name: crime_master_db
     restart: unless-stopped
-    command: /opt/bitnami/scripts/postgresql/run.sh
     environment:
-      - POSTGRESQL_REPLICATION_MODE=master
-      - POSTGRESQL_REPLICATION_USER=${REPL_USER}
-      - POSTGRESQL_REPLICATION_PASSWORD=${REPL_PASS}
-      - POSTGRESQL_USERNAME=${DB_USER}
-      - POSTGRESQL_PASSWORD=${DB_PASSWORD}
-      - POSTGRESQL_DATABASE=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_REPLICATION_USER=${REPL_USER}
+      - POSTGRES_REPLICATION_PASSWORD=${REPL_PASS}
     ports:
       - "${PORT_MASTER}:${DB_PORT}"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_master_data:/var/lib/postgresql/data
+      - ./postgresql/master:/docker-entrypoint-initdb.d:ro
+    command: |
+      postgres
+        -c wal_level=replica
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+        -c hot_standby=on
+        -c wal_keep_size=128
+        -c synchronous_commit=off
+        -c max_connections=20
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 11s
@@ -24,20 +36,36 @@ services:
       - app_network
 
   crime_cases_postgresql:
-    image: bitnami/postgresql:latest
+    image: pgvector/pgvector:pg17
     container_name: crime_cases_slave
     restart: unless-stopped
-    command: /opt/bitnami/scripts/postgresql/run.sh
     environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_MASTER_HOST=${MASTER_HOST}
-      - POSTGRESQL_MASTER_PORT_NUMBER=${DB_PORT}
-      - POSTGRESQL_REPLICATION_USER=${REPL_USER}
-      - POSTGRESQL_REPLICATION_PASSWORD=${REPL_PASS}
-      - POSTGRESQL_MASTER_ROOT_PASSWORD=${DB_PASSWORD} 
-      - POSTGRESQL_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGUSER=${REPL_USER}
+      - PGPASSWORD=${REPL_PASS}
+      - MASTER_HOST=crime_master_db
+      - REPL_USER=${REPL_USER}
+      - REPL_PASS=${REPL_PASS}
     ports:
       - "${PORT_SLAVE_CASES}:${DB_PORT}"
+    volumes:
+      - postgres_cases_data:/var/lib/postgresql/data
+      - ./postgresql/slave:/docker-entrypoint-initdb.d:ro
+    entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/01-init-slave.sh"]
+    command: |
+      postgres
+        -c hot_standby=on
+        -c shared_buffers=64MB
+        -c effective_cache_size=128MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=32MB
+        -c max_connections=20
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 11s
@@ -50,20 +78,36 @@ services:
         condition: service_healthy
 
   crime_suspects_postgresql:
-    image: bitnami/postgresql:latest
+    image: pgvector/pgvector:pg17
     container_name: crime_suspects_slave
     restart: unless-stopped
-    command: /opt/bitnami/scripts/postgresql/run.sh
     environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_MASTER_HOST=${MASTER_HOST}
-      - POSTGRESQL_MASTER_PORT_NUMBER=${DB_PORT}
-      - POSTGRESQL_REPLICATION_USER=${REPL_USER}
-      - POSTGRESQL_REPLICATION_PASSWORD=${REPL_PASS}
-      - POSTGRESQL_MASTER_ROOT_PASSWORD=${DB_PASSWORD} 
-      - POSTGRESQL_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGUSER=${REPL_USER}
+      - PGPASSWORD=${REPL_PASS}
+      - MASTER_HOST=crime_master_db
+      - REPL_USER=${REPL_USER}
+      - REPL_PASS=${REPL_PASS}
     ports:
       - "${PORT_SLAVE_SUSPECTS}:${DB_PORT}"
+    volumes:
+      - postgres_suspects_data:/var/lib/postgresql/data
+      - ./postgresql/slave:/docker-entrypoint-initdb.d:ro
+    entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/01-init-slave.sh"]
+    command: |
+      postgres
+        -c hot_standby=on
+        -c shared_buffers=64MB
+        -c effective_cache_size=128MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=32MB
+        -c max_connections=20
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 11s
@@ -76,20 +120,36 @@ services:
         condition: service_healthy
 
   crime_detective_postgresql:
-    image: bitnami/postgresql:latest
+    image: pgvector/pgvector:pg17
     container_name: crime_detective_slave
     restart: unless-stopped
-    command: /opt/bitnami/scripts/postgresql/run.sh
     environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_MASTER_HOST=${MASTER_HOST}
-      - POSTGRESQL_MASTER_PORT_NUMBER=${DB_PORT}
-      - POSTGRESQL_REPLICATION_USER=${REPL_USER}
-      - POSTGRESQL_REPLICATION_PASSWORD=${REPL_PASS}
-      - POSTGRESQL_MASTER_ROOT_PASSWORD=${DB_PASSWORD} 
-      - POSTGRESQL_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGUSER=${REPL_USER}
+      - PGPASSWORD=${REPL_PASS}
+      - MASTER_HOST=crime_master_db
+      - REPL_USER=${REPL_USER}
+      - REPL_PASS=${REPL_PASS}
     ports:
       - "${PORT_SLAVE_DETECTIVE}:${DB_PORT}"
+    volumes:
+      - postgres_detective_data:/var/lib/postgresql/data
+      - ./postgresql/slave:/docker-entrypoint-initdb.d:ro
+    entrypoint: ["/bin/bash", "/docker-entrypoint-initdb.d/01-init-slave.sh"]
+    command: |
+      postgres
+        -c hot_standby=on
+        -c shared_buffers=64MB
+        -c effective_cache_size=128MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=32MB
+        -c max_connections=20
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 11s
@@ -112,12 +172,18 @@ services:
       - ${APP_PORT}:${APP_PORT}
     env_file:
       - .env
+    deploy:
+      resources:
+        limits:
+          memory: 256m
     networks:
       - app_network
     depends_on:
       crime_master_postgresql:
         condition: service_healthy
       crime_cases_postgresql:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
 
   # nginx:
@@ -130,9 +196,36 @@ services:
   #   depends_on:
   #     - crime_app
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_ai_langchain
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    entrypoint: ["/bin/bash", "/ollama/ollama-init.sh"]
+    volumes:
+      - ollama_models:/root/.ollama 
+      - ./ollama/ollama-init.sh:/ollama/ollama-init.sh:ro
+    deploy:
+      resources:
+        limits:
+          memory: 9g 
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/ollama_ready"]
+      interval: 20s
+      timeout: 11s
+      retries: 61
+      start_period: 121s
+    networks:
+      - app_network
+
 networks:
   app_network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_master_data:
+  postgres_cases_data:
+  postgres_suspects_data:
+  postgres_detective_data:
+  ollama_models:

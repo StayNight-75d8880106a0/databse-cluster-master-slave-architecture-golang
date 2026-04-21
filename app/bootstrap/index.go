@@ -5,6 +5,7 @@ import (
 	"databse-cluster-master-slave-architecture-golang/app/config/app_config"
 	"databse-cluster-master-slave-architecture-golang/app/controller/ws_controller"
 	"databse-cluster-master-slave-architecture-golang/app/database"
+	"databse-cluster-master-slave-architecture-golang/app/registry/ai_registry"
 	"databse-cluster-master-slave-architecture-golang/app/registry/cases_registry"
 	"databse-cluster-master-slave-architecture-golang/app/registry/detective_registry"
 	"databse-cluster-master-slave-architecture-golang/app/registry/suspect_registry"
@@ -46,14 +47,16 @@ func InitAPP() {
 		})
 	})
 
-	wsCtrl := ws_controller.NewWebSocketControllerRegistry()
+	AI_Module := ai_registry.AI_Registry(database.GetInstanceDbCluster().Master)
+
+	wsCtrl := ws_controller.NewWebSocketControllerRegistry(AI_Module.AI_Controller)
 	app.GET("/ws", wsCtrl.Connect)
 
 	app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	CasesModule := cases_registry.Case_Registry()
-	SuspectModule := suspect_registry.Suspect_Registry()
-	DetectiveModule := detective_registry.Detective_Registry()
+	CasesModule := cases_registry.Case_Registry(AI_Module.VectorStore)
+	SuspectModule := suspect_registry.Suspect_Registry(AI_Module.VectorStore)
+	DetectiveModule := detective_registry.Detective_Registry(AI_Module.VectorStore)
 
 	cases_router.CasesRouter(app, CasesModule.Cases_Controller)
 	suspect_router.SuspectRouter(app, SuspectModule.Suspect_Controller)

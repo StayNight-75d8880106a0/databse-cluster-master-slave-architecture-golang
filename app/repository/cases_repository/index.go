@@ -1,6 +1,7 @@
 package cases_repository
 
 import (
+	"databse-cluster-master-slave-architecture-golang/app/ai/vector_store"
 	"databse-cluster-master-slave-architecture-golang/app/database"
 	"databse-cluster-master-slave-architecture-golang/app/models"
 	"fmt"
@@ -11,19 +12,23 @@ import (
 type Cases_Repository struct {
 	master *gorm.DB
 	slave  *gorm.DB
+	vector *vector_store.AI_VectorStore
 }
 
-func NewCasesRepositoryRegistry() *Cases_Repository {
+func NewCasesRepositoryRegistry(vs *vector_store.AI_VectorStore) *Cases_Repository {
 	dbCluster := database.GetInstanceDbCluster()
 	return &Cases_Repository{
 		master: dbCluster.Master,
 		slave:  dbCluster.SlaveCases,
+		vector: vs,
 	}
 }
 
 func (repo *Cases_Repository) Create(cases *models.Cases) error {
 
 	errCreate := repo.master.Table("cases").Create(cases).Error
+
+	go repo.vector.LoadDatabaseSnapshot(repo.master)
 
 	return errCreate
 
@@ -91,6 +96,8 @@ func (repo *Cases_Repository) Update(ID string, cases *models.Cases) error {
 
 	errUpdate := repo.master.Table("cases").Where("id = ?", ID).Updates(cases).Error
 
+	go repo.vector.LoadDatabaseSnapshot(repo.master)
+
 	return errUpdate
 
 }
@@ -98,7 +105,6 @@ func (repo *Cases_Repository) Update(ID string, cases *models.Cases) error {
 func (repo *Cases_Repository) Delete(ID string) error {
 
 	return repo.master.Transaction(func(tx *gorm.DB) error {
-		// Remove many-to-many rows first to satisfy FK constraints.
 		errDeleteRelation := tx.Table("case_detectives").Where("case_id = ?", ID).Delete(&models.CaseDetective{}).Error
 		if errDeleteRelation != nil {
 			return errDeleteRelation
@@ -109,6 +115,8 @@ func (repo *Cases_Repository) Delete(ID string) error {
 		if errDelete != nil {
 			return errDelete
 		}
+
+		go repo.vector.LoadDatabaseSnapshot(repo.master)
 
 		return nil
 	})
@@ -132,6 +140,8 @@ func (repo *Cases_Repository) UpdateDetectiveRelation(ID string, detectives []mo
 	}
 
 	errUpdate := repo.master.Model(&cases).Association("Detective").Replace(detectives)
+
+	go repo.vector.LoadDatabaseSnapshot(repo.master)
 
 	return errUpdate
 

@@ -3,3 +3,8 @@
 nginx/
 
 .github/
+
+
+README.md
+
+init-pgvector.sh

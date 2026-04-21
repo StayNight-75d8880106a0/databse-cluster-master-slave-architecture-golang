@@ -1,16 +1,21 @@
 package ws_controller
 
 import (
+	"databse-cluster-master-slave-architecture-golang/app/ai/ai_controller"
 	"databse-cluster-master-slave-architecture-golang/app/helper"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
-type WebSocket_Controller struct{}
+type WebSocket_Controller struct {
+	AI_Controller *ai_controller.AI_Controller
+}
 
-func NewWebSocketControllerRegistry() *WebSocket_Controller {
-	return &WebSocket_Controller{}
+func NewWebSocketControllerRegistry(ai_controller *ai_controller.AI_Controller) *WebSocket_Controller {
+	return &WebSocket_Controller{
+		AI_Controller: ai_controller,
+	}
 }
 
 func (c *WebSocket_Controller) Connect(ctx *gin.Context) {
@@ -34,10 +39,12 @@ func (c *WebSocket_Controller) Connect(ctx *gin.Context) {
 	}()
 
 	for {
-		_, _, err := conn.ReadMessage()
+		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
+
+		go c.AI_Controller.HandleAiChat(conn, string(msg))
 	}
 
 }

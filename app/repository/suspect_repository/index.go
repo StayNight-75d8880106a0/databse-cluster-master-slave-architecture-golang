@@ -1,6 +1,7 @@
 package suspect_repository
 
 import (
+	"databse-cluster-master-slave-architecture-golang/app/ai/vector_store"
 	"databse-cluster-master-slave-architecture-golang/app/database"
 	"databse-cluster-master-slave-architecture-golang/app/models"
 
@@ -10,20 +11,23 @@ import (
 type Suspect_Repository struct {
 	master *gorm.DB
 	slave2 *gorm.DB
+	vector *vector_store.AI_VectorStore
 }
 
-func NewSuspectRepositoryRegistry() *Suspect_Repository {
-
+func NewSuspectRepositoryRegistry(vs *vector_store.AI_VectorStore) *Suspect_Repository {
 	dbCluster := database.GetInstanceDbCluster()
 	return &Suspect_Repository{
 		master: dbCluster.Master,
 		slave2: dbCluster.SlaveSuspects,
+		vector: vs,
 	}
 }
 
 func (repo *Suspect_Repository) Create(suspect *models.Suspects) error {
 
 	errCreate := repo.master.Table("suspects").Create(suspect).Error
+
+	go repo.vector.LoadDatabaseSnapshot(repo.master)
 
 	return errCreate
 
@@ -60,6 +64,8 @@ func (repo *Suspect_Repository) Update(ID string, ID_Case string, suspect *model
 
 	errUpdate := repo.master.Table("suspects").Where("id = ? AND case_id = ?", ID, ID_Case).Updates(suspect).Error
 
+	go repo.vector.LoadDatabaseSnapshot(repo.master)
+
 	return errUpdate
 
 }
@@ -69,6 +75,8 @@ func (repo *Suspect_Repository) Delete(ID string, ID_Case string) error {
 	var suspect *models.Suspects
 
 	errDelete := repo.master.Table("suspects").Unscoped().Where("id = ? AND case_id = ?", ID, ID_Case).Delete(&suspect).Error
+
+	go repo.vector.LoadDatabaseSnapshot(repo.master)
 
 	return errDelete
 
