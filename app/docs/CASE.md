@@ -1,6 +1,6 @@
 # CASE.md
 
-## Step-by-Step UI Instructions for Case Management (LangChain AI Training)
+## Step-by-Step UI Instructions for Case Management (Crime App Management)
 
 ### 1. Viewing All Cases (Read)
 - Navigate to the "Cases" page from the sidebar.

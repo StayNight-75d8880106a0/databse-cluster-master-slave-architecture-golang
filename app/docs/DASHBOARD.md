@@ -1,6 +1,6 @@
 # DASHBOARD.md
 
-## Step-by-Step UI Instructions for Dashboard (LangChain AI Training)
+## Step-by-Step UI Instructions for Dashboard (Crime App Management)
 
 ### 1. Viewing Dashboard Overview
 - Navigate to the "Dashboard" page from the sidebar (usually the home page).

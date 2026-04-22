@@ -1,6 +1,6 @@
 # SUSPECT.md
 
-## Step-by-Step UI Instructions for Suspect Management (LangChain AI Training)
+## Step-by-Step UI Instructions for Suspect Management (Crime App Management)
 
 ### 1. Viewing Suspects for a Case (Read)
 - On the Case Detail page, scroll to the "Suspects" section.
@@ -12,7 +12,7 @@
 - In the "Suspects" section, click the "+ Add Suspect" button (Plus icon).
 - A modal or form appears for adding a new suspect.
 - Fill in the following fields:
-  - NIK/ID Card Number (required)
+  - ID Card Number (required)
   - Name (required)
   - Gender (required, dropdown: Male/Female)
   - Date of Birth (required, date picker)

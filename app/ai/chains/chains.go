@@ -67,6 +67,7 @@ func (a *AI_Chains) GenerateResponse(ctx context.Context, userInput string, stre
 			},
 		},
 		llms.WithStreamingFunc(streamingFunction),
+		llms.WithMaxTokens(2048),
 	)
 	if err != nil {
 		return "", err

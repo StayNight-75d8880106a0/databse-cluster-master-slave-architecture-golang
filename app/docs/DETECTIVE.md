@@ -1,6 +1,6 @@
 # DETECTIVE.md
 
-## Step-by-Step UI Instructions for Detective Management (LangChain AI Training)
+## Step-by-Step UI Instructions for Detective Management (Crime App Management)
 
 ### 1. Viewing All Detectives (Read)
 - Navigate to the "Detectives" page from the sidebar.
@@ -16,10 +16,10 @@
 - Fill in the following fields:
   - Name (required)
   - Badge Number (required)
-  - Department (required, dropdown)
+  - Department (required)
   - Station (required)
   - Phone (required)
-  - Investigation Style (required, dropdown)
+  - Investigation Style (required, dropdown : Evidence-Based Investigation/Interview-Based Investigation/Undercover Investigation/Follow The Money Investigation/Report-Based Investigation)
 - Click "Submit" to create the detective.
 - On success, you are redirected back to the Detectives page and see the new detective in the list.
 - If you click "Cancel", you are returned to the Detectives page without saving.

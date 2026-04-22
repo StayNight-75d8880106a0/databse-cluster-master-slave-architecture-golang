@@ -15,8 +15,8 @@ done
 echo "✅ Ollama server is up."
 
 # Pull model
-echo "📦 Pulling llama3.2:3b..."
-ollama pull llama3.2:3b
+echo "📦 Pulling qwen2.5:1.5b..."
+ollama pull qwen2.5:1.5b
 
 echo "📦 Pulling nomic-embed-text..."
 ollama pull nomic-embed-text

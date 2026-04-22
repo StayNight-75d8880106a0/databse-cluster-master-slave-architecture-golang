@@ -1,6 +1,6 @@
 # ALL.md
 
-## Complete System Flow, Logic, and Usage (LangChain AI Training)
+## Complete System Flow, Logic, and Usage (Crime App Management)
 
 ### 1. Overview
 This application is a criminal case management system with four main modules: Dashboard, Cases, Detectives, and Suspects. All features are accessible via the sidebar navigation. The UI is modern, responsive, and provides clear feedback for all actions.
