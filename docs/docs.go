@@ -767,6 +767,33 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/ws/connect": {
+            "get": {
+                "description": "Membuka koneksi WebSocket untuk chat AI. Endpoint ini menghubungkan client ke server WebSocket, menyimpan koneksi, dan meneruskan pesan ke AI Controller untuk diproses secara real-time. Cocok untuk fitur chat interaktif berbasis AI.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WebSocket"
+                ],
+                "summary": "Koneksi WebSocket AI Chat",
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols: WebSocket handshake berhasil, koneksi terbuka",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Gagal membuka koneksi WebSocket atau error internal",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

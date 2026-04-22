@@ -18,6 +18,13 @@ func NewWebSocketControllerRegistry(ai_controller *ai_controller.AI_Controller) 
 	}
 }
 
+// @Summary Koneksi WebSocket AI Chat
+// @Description Membuka koneksi WebSocket untuk chat AI. Endpoint ini menghubungkan client ke server WebSocket, menyimpan koneksi, dan meneruskan pesan ke AI Controller untuk diproses secara real-time. Cocok untuk fitur chat interaktif berbasis AI.
+// @Tags WebSocket
+// @Produce json
+// @Success 101 {string} string "Switching Protocols: WebSocket handshake berhasil, koneksi terbuka"
+// @Failure 500 {object} map[string]interface{} "Gagal membuka koneksi WebSocket atau error internal"
+// @Router /api/ws/connect [get]
 func (c *WebSocket_Controller) Connect(ctx *gin.Context) {
 
 	conn, err := helper.Upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
